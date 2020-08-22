@@ -18,7 +18,7 @@ jobs:
       with:
         dotnet-version: 3.1.401
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ github.workspace }}/src/Kuuhaku.sln
     - name: Build
       run: dotnet build ${{ github.workspace }}/src/Kuuhaku.sln --configuration Release --no-restore
     - name: Upload Artifact
