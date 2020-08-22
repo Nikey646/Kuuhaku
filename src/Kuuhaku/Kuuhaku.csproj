@@ -27,4 +27,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Kuuhaku.Commands\Kuuhaku.Commands.csproj" />
+  </ItemGroup>
 </Project>

@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuuhaku", "Kuuhaku\Kuuhaku.csproj", "{12AF367D-4107-438A-A873-1E50662EF4DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuuhaku.Infrastructure", "Kuuhaku.Infrastructure\Kuuhaku.Infrastructure.csproj", "{988D3025-0AF0-48EE-A6D5-33D361DC103F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{12AF367D-4107-438A-A873-1E50662EF4DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12AF367D-4107-438A-A873-1E50662EF4DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12AF367D-4107-438A-A873-1E50662EF4DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{988D3025-0AF0-48EE-A6D5-33D361DC103F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{988D3025-0AF0-48EE-A6D5-33D361DC103F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{988D3025-0AF0-48EE-A6D5-33D361DC103F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{988D3025-0AF0-48EE-A6D5-33D361DC103F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

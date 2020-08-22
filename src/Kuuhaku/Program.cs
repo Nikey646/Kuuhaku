@@ -20,7 +20,7 @@ namespace Kuuhaku
             {
                 using var host = CreateHostBuilder(args);
 
-                    // TODO: Generate example config if it doesn't exist.
+                // TODO: Generate example config if it doesn't exist.
 
                 logger.Information("Starting Kūhaku bot.");
                 await host.StartAsync();
@@ -70,7 +70,7 @@ namespace Kuuhaku
 
                     builder
                         .AddJsonFile(Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Configs",
-                        "Serilog.json"));
+                            "Serilog.json"));
                     AddEnvConfigs(builder, "Kuuhaku", "Kūhaku");
                     AddFileConfigs(builder, "Kuuhaku", "Kūhaku");
                     builder.AddUserSecrets<Program>(true);
@@ -80,6 +80,13 @@ namespace Kuuhaku
                         c.WithUnknownTypeResolution()
                             .WithDisposableTransientTracking()))
                 .UseSerilog((ctx, b) => b.ReadFrom.Configuration(ctx.Configuration))
+                .UsePlugins((ctx, b) =>
+                    b.WithDirectory(ctx.HostingEnvironment.ContentRootPath)
+                        .WithFilePattern("Kuuhaku.Commands.dll"))
+                .UsePlugins((ctx, b) =>
+                    b.WithDirectory(Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Plugins"))
+                        .WithFilePattern("Kuuhaku.*.dll")
+                        .WithFilePattern("Kūhaku.*.dll"))
                 .ConfigureDiscordHost<DiscordSocketClient>((ctx, b) =>
                 {
                     // Allows running multiple versions of the bot on a single host, without having to use files to store the keys.
