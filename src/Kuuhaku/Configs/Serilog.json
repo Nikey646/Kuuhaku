@@ -1,0 +1,55 @@
+{
+  "Serilog": {
+    "Using": [ "Serilog.Settings.Configuration" ],
+    "MinimumLevel": "Verbose",
+    "WriteTo": [
+      {
+        "Name": "Console",
+        "Args": {
+          "theme": "Serilog.Sinks.SystemConsole.Themes.SystemConsoleTheme::Colored, Serilog.Sinks.Console",
+          "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} <s:{SourceContext}>{NewLine}{Exception}"
+        }
+      },
+      {
+        "Name": "Async",
+        "Args": {
+          "configure": [
+            {
+              "Name": "File",
+              "Args": {
+                "path": "logs\\yggdrasil.log",
+                "rollingInterval": "Day",
+                "fileSizeLimitBytes": 5242880,
+                "rollOnFileSizeLimit": true,
+                "outputTemplate": "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception} {Properties:j}{NewLine}"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "Name": "Async",
+        "Args": {
+          "configure": [
+            {
+              "Name": "File",
+              "Args": {
+                "path": "logs\\yggdrasil.clef",
+                "rollingInterval": "Day",
+                "fileSizeLimitBytes": 5242880,
+                "rollOnFileSizeLimit": true,
+                "formatter": "Serilog.Formatting.Compact.CompactJsonFormatter, Serilog.Formatting.Compact"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "Enrich": [
+      "FromLogContext",
+      "WithExceptionDetails"
+    ],
+    "Destructure": [
+    ]
+  }
+}
