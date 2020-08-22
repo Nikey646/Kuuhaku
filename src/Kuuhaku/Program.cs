@@ -14,29 +14,25 @@ namespace Kuuhaku
     {
         public static async Task Main(String[] args)
         {
-            var logger = Log.ForContext<Program>();
-
             try
             {
                 using var host = CreateHostBuilder(args);
 
                 // TODO: Generate example config if it doesn't exist.
 
-                logger.Information("Starting Kūhaku bot.");
+                Log.ForContext<Program>().Information("Starting Kūhaku bot.");
                 await host.StartAsync();
 
-                logger.Information("Kūhaku startup has successfully been completed!");
+                Log.ForContext<Program>().Information("Kūhaku startup has successfully been completed!");
                 await host.WaitForShutdownAsync();
             }
             catch (Exception crap)
             {
-                logger.Fatal(crap, "There was a fatal exception while the host was running.");
+                Log.ForContext<Program>().Fatal(crap, "There was a fatal exception while the host was running.");
             }
             finally
             {
                 Log.CloseAndFlush();
-                if (logger is IDisposable disposable)
-                    disposable.Dispose();
             }
         }
 
