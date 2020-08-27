@@ -1,0 +1,14 @@
+version: '3'
+services:
+  kuuhaku:
+    build: .
+    environment:
+      Kuuhaku_KūhakuToken:
+  seq:
+    image: datalust/seq
+    ports:
+      - "5005:80"
+    environment:
+      ACCEPT_EULA: Y
+    volumes:
+      - ./tmp:/data
