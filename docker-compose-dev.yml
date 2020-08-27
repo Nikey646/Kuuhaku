@@ -1,0 +1,10 @@
+version: '3'
+services:
+  seq:
+    image: datalust/seq
+    ports:
+      - "8080:80"
+    environment:
+      ACCEPT_EULA: Y
+    volumes:
+      - ./tmp:/data
