@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection.Metadata;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using Kuuhaku.Commands.Internal.Extensions;
 using Kuuhaku.Infrastructure.Models;
 using Serilog.Core;
@@ -41,10 +42,17 @@ namespace Kuuhaku.Commands.Internal.Enrichers
             _("Context.Channel.Id", channel.Id);
             _("Context.Channel.Name", channel.Name);
 
+            if (channel is SocketTextChannel textChannel)
+            {
+                var categoryName = textChannel.Category.Name;
+                _("Context.Channel.Category", categoryName);
+                _("Context.Channel.IsNsfw", textChannel.IsNsfw);
+            }
+
             if (!(this.Context is KuuhakuCommandContext kuuhakuContext))
                 return;
 
-            _("Context.Stopwatch.Elapsed", kuuhakuContext.Stopwatch.ElapsedMilliseconds);
+            _("Context.Stopwatch.ElapsedMs", kuuhakuContext.Stopwatch.ElapsedMilliseconds);
             _("Context.Stopwatch.IsRunning", kuuhakuContext.Stopwatch.IsRunning);
         }
     }
