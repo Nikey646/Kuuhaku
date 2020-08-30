@@ -23,7 +23,7 @@ namespace Kuuhaku.Infrastructure.Models
         IUser ICommandContext.User => this.User;
         IUserMessage ICommandContext.Message => this.Message;
 
-        public KuuhakuCommandContext(DiscordSocketClient client, SocketUserMessage message)
+        public KuuhakuCommandContext(DiscordSocketClient client, SocketUserMessage message, Stopwatch stopwatch)
         {
             this.Client = client;
             this.User = message.Author;
@@ -31,7 +31,7 @@ namespace Kuuhaku.Infrastructure.Models
             this.Channel = message.Channel;
             this.Guild = (this.Channel as SocketGuildChannel)?.Guild;
 
-            this.Stopwatch = Stopwatch.StartNew();
+            this.Stopwatch = stopwatch;
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -12,6 +13,8 @@ using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Context;
 
 namespace Kuuhaku.Commands
 {
@@ -39,9 +42,9 @@ namespace Kuuhaku.Commands
             this.CommandExecuted += this.CommandExecutedAsync;
         }
 
-        protected override Task<KuuhakuCommandContext> CreateContextAsync(SocketUserMessage message)
+        protected override Task<KuuhakuCommandContext> CreateContextAsync(SocketUserMessage message, Stopwatch stopwatch)
         {
-            return Task.FromResult(new KuuhakuCommandContext(this._client, message));
+            return Task.FromResult(new KuuhakuCommandContext(this._client, message, stopwatch));
         }
 
         protected override Task<ImmutableArray<String>> GetCommandsAsync(KuuhakuCommandContext context)
@@ -132,8 +135,7 @@ namespace Kuuhaku.Commands
             if (socketChannel?.Category != null)
                 channelName = socketChannel.Category.Name + "/" + channelName;
 
-            this.logger.Trace($"{context.User} ({context.User.Id}) attempted to trigger a command with the input " +
-                              $"{context.Message.Content.Quote()} in {context.Guild?.Name ?? "Private"}/{channelName}");
+            this.logger.Trace("{user} attempted to trigger a command with the input {message} in {server}/{channel}", context.User, context.Message, context.Guild?.Name ?? "Private", channelName);
             return Task.CompletedTask;
         }
 
@@ -191,10 +193,9 @@ namespace Kuuhaku.Commands
 
         private Task CommandExecutedAsync(KuuhakuCommandContext context, IResult result)
         {
-            context.Stopwatch.Stop();
-            this.logger.Trace($"{context.User} ({context.User.Id}) finished executing a command with a result of " +
-                              $"{result.GetType().Name}, and error of {result.Error?.ToString() ?? "No Error"} in " +
-                              $"{context.Stopwatch.Elapsed.ToDuration(true)}");
+            // context.Stopwatch.Stop();
+            this.logger.Trace("{user} finished executing aa command with a result of {resultType}, and error of {errorType} in {time}",
+                context.User, result.GetType().Name, result.Error?.ToString() ?? "No Error", context.Stopwatch.Elapsed.ToDuration(true));
             return Task.CompletedTask;
         }
     }
