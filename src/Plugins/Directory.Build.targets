@@ -5,7 +5,7 @@
         <ItemGroup>
             <Modules Include="$(OutputPath)Kuuhaku.*" Exclude="$(OutputPath)Kuuhaku.Commands.*;$(OutputPath)Kuuhaku.Infrastructure.*;" />
         </ItemGroup>
-        <Copy SourceFiles="@(Modules)" DestinationFolder="$(SolutionDir)/Kuuhaku/bin/$(Configuration)/netcoreapp3.1/Plugins" />
+        <Copy SourceFiles="@(Modules)" DestinationFolder="$(SolutionDir)/Kuuhaku/bin/$(Configuration)/$(TargetFramework)/Plugins" />
     </Target>
 
 </Project>
