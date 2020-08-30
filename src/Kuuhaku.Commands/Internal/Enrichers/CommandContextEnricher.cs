@@ -1,8 +1,10 @@
 using System;
 using System.Linq.Expressions;
+using System.Reflection.Metadata;
 using Discord;
 using Discord.Commands;
 using Kuuhaku.Commands.Internal.Extensions;
+using Kuuhaku.Infrastructure.Models;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -38,6 +40,12 @@ namespace Kuuhaku.Commands.Internal.Enrichers
 
             _("Context.Channel.Id", channel.Id);
             _("Context.Channel.Name", channel.Name);
+
+            if (!(this.Context is KuuhakuCommandContext kuuhakuContext))
+                return;
+
+            _("Context.Stopwatch.Elapsed", kuuhakuContext.Stopwatch.ElapsedMilliseconds);
+            _("Context.Stopwatch.IsRunning", kuuhakuContext.Stopwatch.IsRunning);
         }
     }
 }
