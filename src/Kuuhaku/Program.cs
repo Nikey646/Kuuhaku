@@ -63,7 +63,13 @@ namespace Kuuhaku
                         }
                     }
 
+                    // Remove the default appsettings.json and environment sources.
+                    // Keep the chain source though.
+                    var chainSource = builder.Sources[0];
+                    builder.Sources.Clear();
+                    builder.Sources.Insert(0, chainSource);
 
+                    builder.AddUserSecrets<Program>(false);
                     builder
                         .AddJsonFile(Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Configs",
                             "Serilog.json"));

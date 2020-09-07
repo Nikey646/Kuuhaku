@@ -17,6 +17,7 @@
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0-dev-00887" />
     <PackageReference Include="Serilog.Sinks.Seq" Version="5.0.0-dev-00174" />
     <PackageReference Include="Stashbox.Extensions.Hosting" Version="2.9.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.7" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Configs\Kūhaku.json" />
