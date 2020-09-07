@@ -9,6 +9,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Humanizer;
 using Kuuhaku.Commands.Options;
+using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
@@ -178,7 +179,7 @@ namespace Kuuhaku.Commands
             }
 
 #if DEBUG
-            var embed = new EmbedBuilder()
+            var embed = new KuuhakuEmbedBuilder()
                 .WithColor(EmbedColorType.Failure)
                 .WithTitle($"An Error of {result.Error.Humanize()} Occurred")
                 .WithDescription(result.ErrorReason.Truncate(EmbedBuilder.MaxDescriptionLength - 1))
