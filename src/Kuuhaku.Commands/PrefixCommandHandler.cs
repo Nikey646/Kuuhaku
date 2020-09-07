@@ -13,8 +13,6 @@ using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
 using Microsoft.Extensions.Logging;
-using Serilog;
-using Serilog.Context;
 
 namespace Kuuhaku.Commands
 {
@@ -194,7 +192,7 @@ namespace Kuuhaku.Commands
         private Task CommandExecutedAsync(KuuhakuCommandContext context, IResult result)
         {
             // context.Stopwatch.Stop();
-            this.logger.Trace("{user} finished executing aa command with a result of {resultType}, and error of {errorType} in {time}",
+            this.logger.Trace("{user} finished executing a command with a result of {resultType}, and error of {errorType} in {time}",
                 context.User, result.GetType().Name, result.Error?.ToString() ?? "No Error", context.Stopwatch.Elapsed.ToDuration(true));
             return Task.CompletedTask;
         }
