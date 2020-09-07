@@ -3,21 +3,17 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
 using Kuuhaku.Commands.Internal;
-using Kuuhaku.Commands.Internal.Enrichers;
 using Kuuhaku.Commands.Internal.Extensions;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
-using Kuuhaku.Infrastructure.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Serilog.Context;
 using Stashbox.Attributes;
 
 namespace Kuuhaku.Commands
@@ -145,7 +141,7 @@ namespace Kuuhaku.Commands
         private async Task OnMessageReceivedAsync(SocketUserMessage message)
         {
             IResult result = null;
-            using var _ = this._provider.CreateScope();
+            using var scope = this._provider.CreateScope();
 
             var context = await this.CreateContextAsync(message, Stopwatch.StartNew()).ConfigureAwait(false);
             using var enrichContext = context.Enrich();
@@ -186,7 +182,7 @@ namespace Kuuhaku.Commands
                     // TODO: Create a Harmony Plugin to automatically wrap methods that use a certain method to have the typing disposable
                     // TODO: TypingNotifier
                     // TODO: NoTypingAttribute
-                    result = await commandMatch.Command.ExecuteAsync(context, (ParseResult) result, this._provider)
+                    result = await commandMatch.Command.ExecuteAsync(context, (ParseResult) result, scope.ServiceProvider)
                         .ConfigureAwait(false);
 
                     if (result.IsSuccess)
