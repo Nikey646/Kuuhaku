@@ -16,7 +16,7 @@ namespace Kuuhaku
         {
             try
             {
-                using var host = CreateHostBuilder(args);
+                using var host = CreateHostBuilder(args).Build();
 
                 // TODO: Generate example config if it doesn't exist.
 
@@ -24,7 +24,9 @@ namespace Kuuhaku
                 await host.StartAsync();
 
                 Log.ForContext<Program>().Information("Kūhaku startup has successfully been completed!");
-                await host.WaitForShutdownAsync();
+
+                host.WaitForShutdown();
+                // await host.WaitForShutdownAsync();
             }
             catch (Exception crap)
             {
@@ -36,7 +38,7 @@ namespace Kuuhaku
             }
         }
 
-        private static IHost CreateHostBuilder(string[] args)
+        private static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((ctx, builder) =>
@@ -99,8 +101,7 @@ namespace Kuuhaku
                     b.Token = ctx.Configuration[tokenKey];
                     b.SocketConfig = new DiscordSocketConfig {LogLevel = LogSeverity.Verbose, MessageCacheSize = 200,};
                 })
-                .UseConsoleLifetime()
-                .Build();
+                .UseConsoleLifetime();
         }
     }
 }
