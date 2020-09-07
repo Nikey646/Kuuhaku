@@ -4,7 +4,11 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Hosting;
 using Discord.WebSocket;
+using Kuuhaku.Commands;
+using Kuuhaku.Database;
+using Kuuhaku.Infrastructure.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
@@ -77,16 +81,22 @@ namespace Kuuhaku
                             "Serilog.json"));
                     AddEnvConfigs(builder, "Kuuhaku", "Kūhaku");
                     AddFileConfigs(builder, "Kuuhaku", "Kūhaku");
-                    builder.AddUserSecrets<Program>(true);
+                })
+                .ConfigureServices((ctx, services) =>
+                {
+                    var databaseFactory = new KuuhakuDatabaseFactory();
+                    databaseFactory.ConfigureServices(ctx, services);
+                    services.AddSingleton<IPluginFactory>(databaseFactory);
+
+                    var commandsFactory = new KuuhakuCommandsFactory();
+                    commandsFactory.ConfigureServices(ctx, services);
+                    services.AddSingleton<IPluginFactory>(commandsFactory);
                 })
                 .UseStashbox(b =>
                     b.Configure(c =>
                         c.WithUnknownTypeResolution()
                             .WithDisposableTransientTracking()))
                 .UseSerilog((ctx, b) => b.ReadFrom.Configuration(ctx.Configuration))
-                .UsePlugins((ctx, b) =>
-                    b.WithDirectory(ctx.HostingEnvironment.ContentRootPath)
-                        .WithFilePattern("Kuuhaku.Commands.dll"))
                 .UsePlugins((ctx, b) =>
                     b.WithDirectory(Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Plugins"))
                         .WithFilePattern("Kuuhaku.*.dll")

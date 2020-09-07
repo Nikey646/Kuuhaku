@@ -3,7 +3,7 @@
 
     <Target Name="MoveTask" AfterTargets="Build">
         <ItemGroup>
-            <Modules Include="$(OutputPath)Kuuhaku.*" Exclude="$(OutputPath)Kuuhaku.Commands.*;$(OutputPath)Kuuhaku.Infrastructure.*;" />
+            <Modules Include="$(OutputPath)Kuuhaku.*" Exclude="$(OutputPath)Kuuhaku.Commands.*;$(OutputPath)Kuuhaku.Infrastructure.*;$(OutputPath)Kuuhaku.Database.*;" />
         </ItemGroup>
         <Copy SourceFiles="@(Modules)" DestinationFolder="$(SolutionDir)/Kuuhaku/bin/$(Configuration)/$(TargetFramework)/Plugins" />
     </Target>

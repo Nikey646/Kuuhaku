@@ -31,5 +31,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Kuuhaku.Commands\Kuuhaku.Commands.csproj" />
+    <ProjectReference Include="..\Kuuhaku.Database\Kuuhaku.Database.csproj" />
   </ItemGroup>
 </Project>

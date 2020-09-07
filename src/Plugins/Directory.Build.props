@@ -5,6 +5,7 @@
 
     <ItemGroup>
         <ProjectReference Include="$(SolutionDir)\Kuuhaku.Commands\Kuuhaku.Commands.csproj" />
+        <ProjectReference Include="$(SolutionDir)\Kuuhaku.Database\Kuuhaku.Database.csproj" />
     </ItemGroup>
 
 </Project>

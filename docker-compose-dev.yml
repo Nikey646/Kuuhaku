@@ -7,4 +7,15 @@ services:
     environment:
       ACCEPT_EULA: Y
     volumes:
-      - ./tmp:/data
+      - ./data/seq:/data
+  mariadb:
+    image: mariadb:10
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: Kuuhaku
+      MYSQL_USER: Kuuhaku
+      MYSQL_PASSWORD: Kuuhaku
+    volumes:
+      - ./data/mariadb:/var/lib/mysql
+    ports:
+      - "3306:3306"

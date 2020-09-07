@@ -1,3 +1,6 @@
 {
-  "TokenKey": "KūhakuToken"
+  "TokenKey": "KūhakuToken",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=127.0.0.1;Database=Kuuhaku;Uid=root;Pwd=example;"
+  }
 }
