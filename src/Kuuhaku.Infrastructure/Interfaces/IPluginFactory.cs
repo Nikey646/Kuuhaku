@@ -25,7 +25,7 @@ namespace Kuuhaku.Infrastructure.Interfaces
         async Task<IEnumerable<ModuleInfo>> LoadDiscordModulesAsync(CommandService service, IServiceProvider provider)
         {
             var currentType = this.GetType();
-            Log.ForContext<IPluginFactory>().Verbose($"Loading Modules provided via {currentType.Name}");
+            Log.ForContext<IPluginFactory>().Verbose("Loading Modules provided via {currentType}", currentType.Name);
             return await service.AddModulesAsync(this.GetType().Assembly, provider)
                 .ConfigureAwait(false);
         }
