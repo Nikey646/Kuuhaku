@@ -8,12 +8,16 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Humanizer;
+using Kuuhaku.Commands.Classes;
+using Kuuhaku.Commands.Classes.TypeReaders;
 using Kuuhaku.Commands.Options;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Context;
 
 namespace Kuuhaku.Commands
 {
@@ -39,6 +43,13 @@ namespace Kuuhaku.Commands
             this.CommandMissing += this.CommandMissingAsync;
             this.CommandFailed += this.CommandFailedAsync;
             this.CommandExecuted += this.CommandExecutedAsync;
+        }
+
+        protected override void InstallTypeReaders()
+        {
+            this.logger.Trace("Adding EmoteTypeReader for IEmote.");
+            this.Commands.AddTypeReader<IEmote, EmoteTypeReader>();
+            base.InstallTypeReaders();
         }
 
         protected override Task<KuuhakuCommandContext> CreateContextAsync(SocketUserMessage message, Stopwatch stopwatch)
@@ -161,6 +172,8 @@ namespace Kuuhaku.Commands
 
             if (result is ExceptionResult exceptionResult)
             {
+
+                using var _ = LogContext.PushProperty("Exception", exceptionResult.Exception);
                 // TODO: Report Exception
                 this.logger.Warning(exceptionResult.Exception,
                     "An exception occurred during the execution of a command.");

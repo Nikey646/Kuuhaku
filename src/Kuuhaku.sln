@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuuhaku.ReminderModule", "P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuuhaku.Database", "Kuuhaku.Database\Kuuhaku.Database.csproj", "{4FACF974-FE30-47A4-A7B3-AA8D0E9F7DEE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuuhaku.UserRolesModule", "Plugins\Kuuhaku.UserRolesModule\Kuuhaku.UserRolesModule.csproj", "{0FE5A9AC-D2E8-447A-AD64-BECFCEC0C80A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,9 +46,14 @@ Global
 		{4FACF974-FE30-47A4-A7B3-AA8D0E9F7DEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FACF974-FE30-47A4-A7B3-AA8D0E9F7DEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FACF974-FE30-47A4-A7B3-AA8D0E9F7DEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FE5A9AC-D2E8-447A-AD64-BECFCEC0C80A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FE5A9AC-D2E8-447A-AD64-BECFCEC0C80A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FE5A9AC-D2E8-447A-AD64-BECFCEC0C80A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FE5A9AC-D2E8-447A-AD64-BECFCEC0C80A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{86C17C81-EFB9-46F0-B7E6-CDB2C1DB6697} = {7C64995A-3969-43DA-ADE0-D90281613FEF}
 		{6220A672-1EC8-4231-AC94-1540B6E932D7} = {7C64995A-3969-43DA-ADE0-D90281613FEF}
+		{0FE5A9AC-D2E8-447A-AD64-BECFCEC0C80A} = {7C64995A-3969-43DA-ADE0-D90281613FEF}
 	EndGlobalSection
 EndGlobal
