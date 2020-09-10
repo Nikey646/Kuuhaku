@@ -24,13 +24,18 @@ namespace Kuuhaku.ReminderModule.Classes
 
         public Task<List<Reminder>> GetRemindersAsync(CancellationToken ct = default)
         {
-            return this._context.Reminders.Where(r => r.IsActive)
+            return this._context.Reminders
+                .AsQueryable()
+                .Where(r => r.IsActive)
                 .ToListAsync(ct);
         }
 
         public async Task SetReminderActiveAsync(Guid id, Boolean isActive, CancellationToken ct = default)
         {
-            var reminder = await this._context.Reminders.Where(r => r.Id == id).FirstOrDefaultAsync(ct);
+            var reminder = await this._context.Reminders
+                .AsQueryable()
+                .Where(r => r.Id == id)
+                .FirstOrDefaultAsync(ct);
             reminder.IsActive = isActive;
             await this._context.SaveChangesAsync(ct);
         }
