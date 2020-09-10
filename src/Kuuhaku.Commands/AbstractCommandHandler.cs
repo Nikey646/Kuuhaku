@@ -103,6 +103,11 @@ namespace Kuuhaku.Commands
             this.logger.Trace("Creating Command Service");
             this.Commands = new CommandService(this._commandServiceConfig);
 
+            // It appears you need to run this before loading modules
+            // because Discord.Net throws an exception if an unsupported type
+            // is a param in a module...wtf?
+            this.logger.Trace("Adding Custom Type Readers");
+            this.InstallTypeReaders();
 
             var loadedModules = 0;
             var loadedCommands = 0;
@@ -115,9 +120,6 @@ namespace Kuuhaku.Commands
             }
 
             this.logger.Trace("Loaded {modules} modules wuth {commands} commands.", loadedModules, loadedCommands);
-
-            this.logger.Trace("Adding Custom Type Readers");
-            this.InstallTypeReaders();
 
             this._client.MessageReceived += this.OnMessageReceivedAsync;
         }
