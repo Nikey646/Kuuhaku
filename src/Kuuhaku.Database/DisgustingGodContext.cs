@@ -26,16 +26,6 @@ namespace Kuuhaku.Database
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            base.OnModelCreating(builder);
-
-            var intCollectionConverter = new ValueConverter<ICollection<UInt64>, String>(
-                v => String.Join(",", v),
-                v => v.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries).Select(i => UInt64.Parse(i)).ToList());
-
-            builder.Entity<UserRoleLocation>()
-                .Property(nameof(UserRoleLocation.MessageIds))
-                .HasConversion(intCollectionConverter);
-
             builder.Entity<UserRole>()
                 .Property(nameof(UserRole.ShortDescription))
                 .HasMaxLength(200);

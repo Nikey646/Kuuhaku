@@ -14,9 +14,6 @@ namespace Kuuhaku.Database.DbModels
         public UInt64 GuildId { get; set; }
         public UInt64 ChannelId { get; set; }
 
-        // If this is null, there isn't a message.
-        public ICollection<UInt64> MessageIds { get; set; } = new List<UInt64>();
-
         public ICollection<UserRole> Roles { get; set; } = new List<UserRole>();
     }
 }

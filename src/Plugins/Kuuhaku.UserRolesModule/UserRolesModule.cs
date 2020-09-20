@@ -48,6 +48,29 @@ namespace Kuuhaku.UserRolesModule
             }
 
             await this._userRoleService.AddRoleAsync(this.Guild, messageChannel, role, emote, shortDescription);
+            await this.Message.AddReactionAsync(new Emoji(NeoSmart.Unicode.Emoji.ThumbsUp.ToString()));
+        }
+
+        [Command("user roles remove")]
+        public Task RemoveRoleAsync(IRole role)
+            => this.RemoveRoleAsync(this.Channel, role);
+
+        [Command("user roles remove")]
+        public async Task RemoveRoleAsync(IMessageChannel channel, IRole role)
+        {
+            if (this.IsPrivate)
+            {
+                var builder = new KuuhakuEmbedBuilder()
+                    .WithColor()
+                    .WithTitle("No no")
+                    .WithDescription("This command is only for servers. Sorry.")
+                    .WithFooter(this.Context);
+                await this.ReplyAsync(builder);
+                return;
+            }
+
+            await this._userRoleService.RemoveRoleAsync(this.Guild, channel, role);
+            await this.Message.AddReactionAsync(new Emoji(NeoSmart.Unicode.Emoji.ThumbsUp.ToString()));
         }
     }
 }

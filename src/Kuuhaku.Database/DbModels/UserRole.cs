@@ -6,6 +6,7 @@ namespace Kuuhaku.Database.DbModels
     {
         public Guid Id { get; set; }
 
+        public UInt64? MessageId { get; set; }
         public UInt64 RoleId { get; set; }
 
         public UInt64? EmojiId { get; set; }
