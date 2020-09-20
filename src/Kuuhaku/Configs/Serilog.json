@@ -43,7 +43,8 @@
             }
           ]
         }
-      }
+      },
+      { "Name": "Seq", "Args": { "serverUrl": "http://localhost:8080" } }
     ],
     "Enrich": [
       "FromLogContext",

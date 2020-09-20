@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Models;
 
 namespace Kuuhaku.Infrastructure.Extensions
@@ -18,29 +19,29 @@ namespace Kuuhaku.Infrastructure.Extensions
             { EmbedColorType.Default, new Color(74, 20, 140) },
         };
 
-        public static EmbedBuilder WithColor(this EmbedBuilder embed, EmbedColorType type = EmbedColorType.Default)
+        public static KuuhakuEmbedBuilder WithColor(this KuuhakuEmbedBuilder embed, EmbedColorType type = EmbedColorType.Default)
             => embed.WithColor(EmbedColorTypeMap[type]);
 
-        public static EmbedBuilder WithAuthor(this EmbedBuilder embed, IUser user)
+        public static KuuhakuEmbedBuilder WithAuthor(this KuuhakuEmbedBuilder embed, IUser user)
             => embed.WithAuthor(user.GetName(), user.GetAvatar(32));
 
-        public static EmbedBuilder WithField(this EmbedBuilder embed, String title, String value,
+        public static KuuhakuEmbedBuilder WithField(this KuuhakuEmbedBuilder embed, String title, String value,
             Boolean isInline = true)
             => embed.AddField(title, value, isInline);
 
-        public static EmbedBuilder WithFieldIf(this EmbedBuilder embed, String title, String value,
+        public static KuuhakuEmbedBuilder WithFieldIf(this KuuhakuEmbedBuilder embed, String title, String value,
             Boolean isInline = true, Boolean include = true)
             => include ? embed.WithField(title, value, isInline) : embed;
 
         // Late evaluation, EG: Potential DB lookup
-        public static EmbedBuilder WithFieldIf(this EmbedBuilder embed, String title, Func<String> value,
+        public static KuuhakuEmbedBuilder WithFieldIf(this KuuhakuEmbedBuilder embed, String title, Func<String> value,
             Boolean isInline = true, Boolean include = true)
             => include ? embed.WithField(title, value(), isInline) : embed;
 
-        public static EmbedBuilder WithFooter(this EmbedBuilder embed, ICommandContext context)
+        public static KuuhakuEmbedBuilder WithFooter(this KuuhakuEmbedBuilder embed, ICommandContext context)
             => embed.WithFooter((context.Guild as SocketGuild)?.CurrentUser ?? (IUser) context.Client.CurrentUser);
 
-        public static EmbedBuilder WithFooter(this EmbedBuilder embed, IUser user)
+        public static KuuhakuEmbedBuilder WithFooter(this KuuhakuEmbedBuilder embed, IUser user)
             => embed.WithFooter(user.GetName(), user.GetAvatar(32));
 
     }

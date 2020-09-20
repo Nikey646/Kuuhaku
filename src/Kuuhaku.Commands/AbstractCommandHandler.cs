@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +11,6 @@ using Kuuhaku.Commands.Internal;
 using Kuuhaku.Commands.Internal.Extensions;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
-using Kuuhaku.Infrastructure.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -103,6 +103,11 @@ namespace Kuuhaku.Commands
             this.logger.Trace("Creating Command Service");
             this.Commands = new CommandService(this._commandServiceConfig);
 
+            // It appears you need to run this before loading modules
+            // because Discord.Net throws an exception if an unsupported type
+            // is a param in a module...wtf?
+            this.logger.Trace("Adding Custom Type Readers");
+            this.InstallTypeReaders();
 
             var loadedModules = 0;
             var loadedCommands = 0;
@@ -114,10 +119,7 @@ namespace Kuuhaku.Commands
                 loadedCommands += moduleInfos.Sum(m => m.Commands.Count);
             }
 
-            this.logger.Trace($"Loaded {loadedModules} modules with {loadedCommands} commands.");
-
-            this.logger.Trace("Adding Custom Type Readers");
-            this.InstallTypeReaders();
+            this.logger.Trace("Loaded {modules} modules wuth {commands} commands.", loadedModules, loadedCommands);
 
             this._client.MessageReceived += this.OnMessageReceivedAsync;
         }
@@ -135,15 +137,16 @@ namespace Kuuhaku.Commands
         protected virtual String FilterCommandString(TCommandContext context, String command)
             => command;
 
-        protected abstract Task<TCommandContext> CreateContextAsync(SocketUserMessage message);
+        protected abstract Task<TCommandContext> CreateContextAsync(SocketUserMessage message, Stopwatch stopwatch);
         protected abstract Task<ImmutableArray<String>> GetCommandsAsync(TCommandContext context);
 
         private async Task OnMessageReceivedAsync(SocketUserMessage message)
         {
             IResult result = null;
-            using var _ = this._provider.CreateScope();
+            using var scope = this._provider.CreateScope();
 
-            var context = await this.CreateContextAsync(message).ConfigureAwait(false);
+            var context = await this.CreateContextAsync(message, Stopwatch.StartNew()).ConfigureAwait(false);
+            using var enrichContext = context.Enrich();
             var commands = await this.GetCommandsAsync(context).ConfigureAwait(false);
 
             if (commands.Length <= 0)
@@ -175,13 +178,13 @@ namespace Kuuhaku.Commands
                     }
 
                     var commandMatch = possibleMatch.Value;
-                    this.logger.Trace($"Found the \"{commandMatch.Command.Name}\" command from the " +
-                                      $"\"{commandMatch.Command.Module.Name}\" module for {context.User}");
+                    this.logger.Trace("Found the {commandName} command from the {moduleName} module for {user}",
+                        commandMatch.Command.Name, commandMatch.Command.Module.Name, context.User);
 
                     // TODO: Create a Harmony Plugin to automatically wrap methods that use a certain method to have the typing disposable
                     // TODO: TypingNotifier
                     // TODO: NoTypingAttribute
-                    result = await commandMatch.Command.ExecuteAsync(context, (ParseResult) result, this._provider)
+                    result = await commandMatch.Command.ExecuteAsync(context, (ParseResult) result, scope.ServiceProvider)
                         .ConfigureAwait(false);
 
                     if (result.IsSuccess)

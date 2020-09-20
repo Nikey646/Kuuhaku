@@ -1,17 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Humanizer;
+using Kuuhaku.Commands.Classes;
+using Kuuhaku.Commands.Classes.TypeReaders;
 using Kuuhaku.Commands.Options;
+using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Context;
 
 namespace Kuuhaku.Commands
 {
@@ -39,9 +45,16 @@ namespace Kuuhaku.Commands
             this.CommandExecuted += this.CommandExecutedAsync;
         }
 
-        protected override Task<KuuhakuCommandContext> CreateContextAsync(SocketUserMessage message)
+        protected override void InstallTypeReaders()
         {
-            return Task.FromResult(new KuuhakuCommandContext(this._client, message));
+            this.logger.Trace("Adding EmoteTypeReader for IEmote.");
+            this.Commands.AddTypeReader<IEmote, EmoteTypeReader>();
+            base.InstallTypeReaders();
+        }
+
+        protected override Task<KuuhakuCommandContext> CreateContextAsync(SocketUserMessage message, Stopwatch stopwatch)
+        {
+            return Task.FromResult(new KuuhakuCommandContext(this._client, message, stopwatch));
         }
 
         protected override Task<ImmutableArray<String>> GetCommandsAsync(KuuhakuCommandContext context)
@@ -132,8 +145,7 @@ namespace Kuuhaku.Commands
             if (socketChannel?.Category != null)
                 channelName = socketChannel.Category.Name + "/" + channelName;
 
-            this.logger.Trace($"{context.User} ({context.User.Id}) attempted to trigger a command with the input " +
-                              $"{context.Message.Content.Quote()} in {context.Guild?.Name ?? "Private"}/{channelName}");
+            this.logger.Trace("{user} attempted to trigger a command with the input {message} in {server}/{channel}", context.User, context.Message, context.Guild?.Name ?? "Private", channelName);
             return Task.CompletedTask;
         }
 
@@ -160,6 +172,8 @@ namespace Kuuhaku.Commands
 
             if (result is ExceptionResult exceptionResult)
             {
+
+                using var _ = LogContext.PushProperty("Exception", exceptionResult.Exception);
                 // TODO: Report Exception
                 this.logger.Warning(exceptionResult.Exception,
                     "An exception occurred during the execution of a command.");
@@ -178,7 +192,7 @@ namespace Kuuhaku.Commands
             }
 
 #if DEBUG
-            var embed = new EmbedBuilder()
+            var embed = new KuuhakuEmbedBuilder()
                 .WithColor(EmbedColorType.Failure)
                 .WithTitle($"An Error of {result.Error.Humanize()} Occurred")
                 .WithDescription(result.ErrorReason.Truncate(EmbedBuilder.MaxDescriptionLength - 1))
@@ -191,10 +205,9 @@ namespace Kuuhaku.Commands
 
         private Task CommandExecutedAsync(KuuhakuCommandContext context, IResult result)
         {
-            context.Stopwatch.Stop();
-            this.logger.Trace($"{context.User} ({context.User.Id}) finished executing a command with a result of " +
-                              $"{result.GetType().Name}, and error of {result.Error?.ToString() ?? "No Error"} in " +
-                              $"{context.Stopwatch.Elapsed.ToDuration(true)}");
+            // context.Stopwatch.Stop();
+            this.logger.Trace("{user} finished executing a command with a result of {resultType}, and error of {errorType} in {time}",
+                context.User, result.GetType().Name, result.Error?.ToString() ?? "No Error", context.Stopwatch.Elapsed.ToDuration(true));
             return Task.CompletedTask;
         }
     }

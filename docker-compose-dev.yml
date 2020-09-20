@@ -1,0 +1,21 @@
+version: '3'
+services:
+  seq:
+    image: datalust/seq
+    ports:
+      - "8080:80"
+    environment:
+      ACCEPT_EULA: Y
+    volumes:
+      - ./data/seq:/data
+  mariadb:
+    image: mariadb:10
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: Kuuhaku
+      MYSQL_USER: Kuuhaku
+      MYSQL_PASSWORD: Kuuhaku
+    volumes:
+      - ./data/mariadb:/var/lib/mysql
+    ports:
+      - "3306:3306"

@@ -4,7 +4,11 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Addons.Hosting;
 using Discord.WebSocket;
+using Kuuhaku.Commands;
+using Kuuhaku.Database;
+using Kuuhaku.Infrastructure.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
@@ -16,7 +20,7 @@ namespace Kuuhaku
         {
             try
             {
-                using var host = CreateHostBuilder(args);
+                using var host = CreateHostBuilder(args).Build();
 
                 // TODO: Generate example config if it doesn't exist.
 
@@ -24,7 +28,9 @@ namespace Kuuhaku
                 await host.StartAsync();
 
                 Log.ForContext<Program>().Information("Kūhaku startup has successfully been completed!");
-                await host.WaitForShutdownAsync();
+
+                host.WaitForShutdown();
+                // await host.WaitForShutdownAsync();
             }
             catch (Exception crap)
             {
@@ -36,7 +42,7 @@ namespace Kuuhaku
             }
         }
 
-        private static IHost CreateHostBuilder(string[] args)
+        private static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((ctx, builder) =>
@@ -63,22 +69,34 @@ namespace Kuuhaku
                         }
                     }
 
+                    // Remove the default appsettings.json and environment sources.
+                    // Keep the chain source though.
+                    var chainSource = builder.Sources[0];
+                    builder.Sources.Clear();
+                    builder.Sources.Insert(0, chainSource);
 
+                    builder.AddUserSecrets<Program>(false);
                     builder
                         .AddJsonFile(Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Configs",
                             "Serilog.json"));
                     AddEnvConfigs(builder, "Kuuhaku", "Kūhaku");
                     AddFileConfigs(builder, "Kuuhaku", "Kūhaku");
-                    builder.AddUserSecrets<Program>(true);
+                })
+                .ConfigureServices((ctx, services) =>
+                {
+                    var databaseFactory = new KuuhakuDatabaseFactory();
+                    databaseFactory.ConfigureServices(ctx, services);
+                    services.AddSingleton<IPluginFactory>(databaseFactory);
+
+                    var commandsFactory = new KuuhakuCommandsFactory();
+                    commandsFactory.ConfigureServices(ctx, services);
+                    services.AddSingleton<IPluginFactory>(commandsFactory);
                 })
                 .UseStashbox(b =>
                     b.Configure(c =>
                         c.WithUnknownTypeResolution()
                             .WithDisposableTransientTracking()))
                 .UseSerilog((ctx, b) => b.ReadFrom.Configuration(ctx.Configuration))
-                .UsePlugins((ctx, b) =>
-                    b.WithDirectory(ctx.HostingEnvironment.ContentRootPath)
-                        .WithFilePattern("Kuuhaku.Commands.dll"))
                 .UsePlugins((ctx, b) =>
                     b.WithDirectory(Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Plugins"))
                         .WithFilePattern("Kuuhaku.*.dll")
@@ -93,8 +111,7 @@ namespace Kuuhaku
                     b.Token = ctx.Configuration[tokenKey];
                     b.SocketConfig = new DiscordSocketConfig {LogLevel = LogSeverity.Verbose, MessageCacheSize = 200,};
                 })
-                .UseConsoleLifetime()
-                .Build();
+                .UseConsoleLifetime();
         }
     }
 }
