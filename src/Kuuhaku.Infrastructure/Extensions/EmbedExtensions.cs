@@ -30,13 +30,13 @@ namespace Kuuhaku.Infrastructure.Extensions
             => embed.AddField(title, value, isInline);
 
         public static KuuhakuEmbedBuilder WithFieldIf(this KuuhakuEmbedBuilder embed, String title, String value,
-            Boolean isInline = true, Boolean include = true)
-            => include ? embed.WithField(title, value, isInline) : embed;
+            Boolean isInline = true, Boolean includeIf = true)
+            => includeIf ? embed.WithField(title, value, isInline) : embed;
 
         // Late evaluation, EG: Potential DB lookup
         public static KuuhakuEmbedBuilder WithFieldIf(this KuuhakuEmbedBuilder embed, String title, Func<String> value,
-            Boolean isInline = true, Boolean include = true)
-            => include ? embed.WithField(title, value(), isInline) : embed;
+            Boolean isInline = true, Boolean includeIf = true)
+            => includeIf ? embed.WithField(title, value(), isInline) : embed;
 
         public static KuuhakuEmbedBuilder WithFooter(this KuuhakuEmbedBuilder embed, ICommandContext context)
             => embed.WithFooter((context.Guild as SocketGuild)?.CurrentUser ?? (IUser) context.Client.CurrentUser);
