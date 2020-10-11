@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
 using Kuuhaku.Commands;
+using Kuuhaku.Commands.Classes;
 using Kuuhaku.Commands.Options;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
@@ -16,9 +17,10 @@ namespace Kuuhaku.QuotedCommandHandler
     public class QuotedCommandHandler : PrefixCommandHandler
     {
         public QuotedCommandHandler(IServiceProvider provider, DiscordSocketClient client,
-            CommandServiceConfig commandServiceConfig, CommandHandlerOptions options,
-            IEnumerable<IPluginFactory> pluginFactories, ILogger<QuotedCommandHandler> logger) : base(provider, client,
-            commandServiceConfig, options, pluginFactories, logger)
+            CommandServiceConfig commandServiceConfig, CommandHandlerOptions options, CustomModuleBuilder moduleBuilder,
+            IEnumerable<IPluginFactory> pluginFactories,
+            ILogger<PrefixCommandHandler> logger, CommandService commandService)
+            : base(provider, client, commandServiceConfig, options, moduleBuilder, pluginFactories, logger, commandService)
         {
             base.logger = logger;
         }

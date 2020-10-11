@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
+using Kuuhaku.Commands.Classes;
 using Kuuhaku.Commands.Internal;
 using Kuuhaku.Commands.Internal.Extensions;
 using Kuuhaku.Infrastructure.Extensions;
@@ -14,18 +15,19 @@ using Kuuhaku.Infrastructure.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Stashbox.Attributes;
 
 namespace Kuuhaku.Commands
 {
     public abstract class AbstractCommandHandler<TCommandContext> : IHostedService
         where TCommandContext : ICommandContext
     {
-        [Dependency] private ILogger logger { get; }
-        [Dependency] protected IServiceProvider _provider;
-        [Dependency] protected DiscordSocketClient _client;
-        [Dependency] protected CommandServiceConfig _commandServiceConfig;
-        [Dependency] protected IPluginFactory[] _pluginFactories;
+        private ILogger logger { get; }
+        protected IServiceProvider _provider;
+        protected DiscordSocketClient _client;
+        protected CommandServiceConfig _commandServiceConfig;
+        private readonly CustomModuleBuilder _moduleBuilder;
+        private readonly CommandService _commandService;
+        protected IPluginFactory[] _pluginFactories;
 
         private readonly AsyncEvent<Func<TCommandContext, Task>> _commandTriggered
             = new AsyncEvent<Func<TCommandContext, Task>>();
@@ -87,13 +89,17 @@ namespace Kuuhaku.Commands
             remove => this._commandExecuted.Remove(value);
         }
 
-        protected CommandService Commands { get; set; }
+        protected CommandService Commands => this._commandService;
 
-        protected AbstractCommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandServiceConfig commandServiceConfig, IEnumerable<IPluginFactory> pluginFactories, ILogger logger)
+        protected AbstractCommandHandler(IServiceProvider provider, DiscordSocketClient client,
+            CommandServiceConfig commandServiceConfig, CustomModuleBuilder moduleBuilder,
+            IEnumerable<IPluginFactory> pluginFactories, ILogger logger, CommandService commandService)
         {
             this._provider = provider;
             this._client = client;
-            this._commandServiceConfig = commandServiceConfig;
+            // this._commandServiceConfig = commandServiceConfig;
+            this._moduleBuilder = moduleBuilder;
+            this._commandService = commandService;
             this._pluginFactories = pluginFactories.ToArray();
             this.logger = logger; // Log.Logger.ForContext<AbstractCommandHandler<TCommandContext>>();
         }
@@ -101,7 +107,7 @@ namespace Kuuhaku.Commands
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             this.logger.Trace("Creating Command Service");
-            this.Commands = new CommandService(this._commandServiceConfig);
+            // this.Commands = new CommandService(this._commandServiceConfig);
 
             // It appears you need to run this before loading modules
             // because Discord.Net throws an exception if an unsupported type
@@ -109,17 +115,25 @@ namespace Kuuhaku.Commands
             this.logger.Trace("Adding Custom Type Readers");
             this.InstallTypeReaders();
 
-            var loadedModules = 0;
-            var loadedCommands = 0;
             foreach (var pluginFactory in this._pluginFactories)
             {
-                var moduleInfos =
-                    (await pluginFactory.LoadDiscordModulesAsync(this.Commands, this._provider)).ToArray();
-                loadedModules += moduleInfos.Length;
-                loadedCommands += moduleInfos.Sum(m => m.Commands.Count);
+                await pluginFactory.LoadDiscordModulesAsync(this._moduleBuilder);
             }
 
-            this.logger.Trace("Loaded {modules} modules wuth {commands} commands.", loadedModules, loadedCommands);
+            this.logger.Trace("Loaded {modules} modules with {commands} commands.", this._moduleBuilder.Modules.Count,
+                this._moduleBuilder.Modules.Sum(m => m.Commands.Count));
+
+            // var loadedModules = 0;
+            // var loadedCommands = 0;
+            // foreach (var pluginFactory in this._pluginFactories)
+            // {
+            //     var moduleInfos =
+            //         (await pluginFactory.LoadDiscordModulesAsync(this._moduleBuilder);
+            //     loadedModules += moduleInfos.Length;
+            //     loadedCommands += moduleInfos.Sum(m => m.Commands.Count);
+            // }
+            //
+            // this.logger.Trace("Loaded {modules} modules wuth {commands} commands.", loadedModules, loadedCommands);
 
             this._client.MessageReceived += this.OnMessageReceivedAsync;
         }

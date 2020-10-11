@@ -32,9 +32,10 @@ namespace Kuuhaku.Commands
 
         public PrefixCommandHandler(IServiceProvider provider, DiscordSocketClient client,
             CommandServiceConfig commandServiceConfig, CommandHandlerOptions options,
+            CustomModuleBuilder moduleBuilder,
             IEnumerable<IPluginFactory> pluginFactories,
-            ILogger<PrefixCommandHandler> logger)
-            : base(provider, client, commandServiceConfig, pluginFactories, logger)
+            ILogger<PrefixCommandHandler> logger, CommandService commandService)
+            : base(provider, client, commandServiceConfig, moduleBuilder, pluginFactories, logger, commandService)
         {
             this.Options = options;
             this.logger = logger;

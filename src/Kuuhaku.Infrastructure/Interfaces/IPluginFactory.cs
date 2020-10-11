@@ -22,12 +22,11 @@ namespace Kuuhaku.Infrastructure.Interfaces
             return (name, null);
         }
 
-        async Task<IEnumerable<ModuleInfo>> LoadDiscordModulesAsync(CommandService service, IServiceProvider provider)
+        Task LoadDiscordModulesAsync(IModuleBuilder moduleBuilder)
         {
             var currentType = this.GetType();
             Log.ForContext<IPluginFactory>().Verbose("Loading Modules provided via {currentType}", currentType.Name);
-            return await service.AddModulesAsync(this.GetType().Assembly, provider)
-                .ConfigureAwait(false);
+            return moduleBuilder.BuildAsync(currentType.Assembly);
         }
 
     }
