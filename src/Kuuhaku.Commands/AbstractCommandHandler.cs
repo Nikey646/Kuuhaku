@@ -151,7 +151,7 @@ namespace Kuuhaku.Commands
         protected virtual String FilterCommandString(TCommandContext context, String command)
             => command;
 
-        protected abstract Task<TCommandContext> CreateContextAsync(SocketUserMessage message, Stopwatch stopwatch);
+        protected abstract Task<TCommandContext> CreateContextAsync(IServiceProvider serviceProvider, SocketUserMessage message, Stopwatch stopwatch);
         protected abstract Task<ImmutableArray<String>> GetCommandsAsync(TCommandContext context);
 
         private async Task OnMessageReceivedAsync(SocketUserMessage message)
@@ -159,7 +159,8 @@ namespace Kuuhaku.Commands
             IResult result = null;
             using var scope = this._provider.CreateScope();
 
-            var context = await this.CreateContextAsync(message, Stopwatch.StartNew()).ConfigureAwait(false);
+            var context = await this.CreateContextAsync(scope.ServiceProvider, message, Stopwatch.StartNew())
+                .ConfigureAwait(false);
             using var enrichContext = context.Enrich();
             var commands = await this.GetCommandsAsync(context).ConfigureAwait(false);
 
