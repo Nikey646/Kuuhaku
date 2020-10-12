@@ -8,7 +8,11 @@ namespace Kuuhaku.Commands.Classes.Repositories
 {
     public class GuildConfigRepository : AbstractRepository<GuildConfig, Guid>
     {
+        public new readonly DisgustingGodContext Context;
+
         public GuildConfigRepository(DisgustingGodContext context) : base(context)
-        { }
+        {
+            this.Context = context;
+        }
     }
 }
