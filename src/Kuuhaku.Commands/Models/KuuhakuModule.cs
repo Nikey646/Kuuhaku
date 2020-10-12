@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Kuuhaku.Database.DbModels;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Models;
 using Kuuhaku.Infrastructure.Extensions;
@@ -21,6 +22,7 @@ namespace Kuuhaku.Commands.Models
         protected SocketUserMessage Message => this.Context.Message;
         protected ISocketMessageChannel Channel => this.Context.Channel;
         protected SocketGuild Guild => this.Context.Guild;
+        protected GuildConfig Config => this.Context.Config;
 
         protected Boolean IsPrivate => this.Context.IsPrivate;
 
