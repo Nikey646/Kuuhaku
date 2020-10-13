@@ -20,6 +20,19 @@ namespace Kuuhaku.Commands.Modules
             this._repository = repository;
         }
 
+        [Command, Alias("info")]
+        public async Task GetInfoAsync()
+        {
+            var embed = new KuuhakuEmbedBuilder()
+                .WithColor()
+                .WithDescription("The current settings for this server is...")
+                .WithField("Prefix", this.Config.Prefix)
+                .WithField("Command Seperator", this.Config.CommandSeperator)
+                .WithFooter(this.Context);
+
+            await this.ReplyAsync(embed);
+        }
+
         [Command("prefix")]
         public async Task GetPrefixAsync()
         {
