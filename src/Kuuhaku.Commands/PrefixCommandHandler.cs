@@ -197,23 +197,24 @@ namespace Kuuhaku.Commands
 #endif
 
             // TODO: Stats for commands completed unsuccessfully
+            // TODO: Investigate why this was slowing down commands finishing by 20+ seconds
 
-            if (result is ExceptionResult exceptionResult)
-            {
-
-                using var _ = LogContext.PushProperty("Exception", exceptionResult.Exception);
-                // TODO: Report Exception
-                this.logger.Warning(exceptionResult.Exception,
-                    "An exception occurred during the execution of a command.");
-            }
+            // if (result is ExceptionResult exceptionResult)
+            // {
+            //
+            //     using var _ = LogContext.PushProperty("Exception", exceptionResult.Exception);
+            //     // TODO: Report Exception
+            //     this.logger.Warning(exceptionResult.Exception,
+            //         "An exception occurred during the execution of a command.");
+            // }
 
             if (result is ExecuteResult executeResult)
             {
                 var crap = executeResult.Exception;
                 if (crap != null)
                 {
-                    crap.Data["Context"] = context;
-                    crap.Data["Result"] = result;
+                    // crap.Data["Context"] = context;
+                    // crap.Data["Result"] = result;
                     // TODO: Report Exception
                     this.logger.Warning(crap, "An exeception occurred during the execution of a command.");
                 }
