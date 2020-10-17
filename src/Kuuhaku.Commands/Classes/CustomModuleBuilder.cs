@@ -15,7 +15,7 @@ using Kuuhaku.Commands.Models.Metadata;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
-using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ParameterInfo = System.Reflection.ParameterInfo;
@@ -141,7 +141,7 @@ namespace Kuuhaku.Commands.Classes
             async Task<IResult> ExecuteCommand(ICommandContext context, Object[] args, IServiceProvider services,
                 CommandInfo cmd)
             {
-                var instance = (IModule) services.GetService(moduleType);
+                var instance = (IModule) services.GetRequiredService(moduleType);
                 instance.SetContext(context as KuuhakuCommandContext);
 
                 try
