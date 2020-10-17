@@ -24,6 +24,8 @@ namespace Kuuhaku.Commands
             services.AddSingleton<IModuleBuilder>(s => s.GetRequiredService<CustomModuleBuilder>());
             services.AddSingleton<IHostedService>(s => s.GetRequiredService<CustomModuleBuilder>());
 
+            services.AddSingleton<IHostedService, NewGuildWatcher>();
+
             services.AddSingleton<IModuleMetadataProvider>(s => new ChainableProvider(s.GetRequiredService<ILogger<ChainableProvider>>())
                 .AddProvider(new JsonProvider(Path.Combine(AppContext.BaseDirectory, "Metadata"),
                     s.GetRequiredService<ILogger<JsonProvider>>()))

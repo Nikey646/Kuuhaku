@@ -1,5 +1,4 @@
-﻿using System;
-using Kuuhaku.Infrastructure.Interfaces;
+﻿using Kuuhaku.Infrastructure.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using BooruViewer.Interop.Extensions;
@@ -10,7 +9,8 @@ namespace Kuuhaku.BooruModule
     {
         public void ConfigureServices(HostBuilderContext ctx, IServiceCollection services)
         {
-            services.WithDanbooru();
+            services.AddDistributedMemoryCache();
+            services.WithAllBoorus();
         }
     }
 }

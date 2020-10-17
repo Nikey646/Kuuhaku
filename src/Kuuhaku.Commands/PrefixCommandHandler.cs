@@ -9,12 +9,14 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Humanizer;
 using Kuuhaku.Commands.Classes;
+using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Classes.TypeReaders;
 using Kuuhaku.Commands.Options;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Context;
@@ -53,9 +55,34 @@ namespace Kuuhaku.Commands
             base.InstallTypeReaders();
         }
 
-        protected override Task<KuuhakuCommandContext> CreateContextAsync(SocketUserMessage message, Stopwatch stopwatch)
+        protected override async Task<KuuhakuCommandContext> CreateContextAsync(IServiceProvider provider, SocketUserMessage message, Stopwatch stopwatch)
         {
-            return Task.FromResult(new KuuhakuCommandContext(this._client, message, stopwatch));
+            // TODO: Cache in memory and work from there.
+
+            var context = new KuuhakuCommandContext(this._client, message, stopwatch);
+            if (context.IsPrivate)
+                return context;
+
+
+            try
+            {
+                var repo = provider.GetService<GuildConfigRepository>();
+                var configs = await repo.FindAsync(c => c.GuildId == context.Guild.Id);
+                var config = configs.FirstOrDefault();
+
+                // This should only occur when bots are sending messages immediately as a user joins,
+                // and we receive one before the NewGuildWatcher stores the config.
+                if (config == default)
+                    return context;
+
+                context.Config = config;
+                return context;
+            }
+            catch (Exception crap)
+            {
+                this.logger.Warning(crap, "An unexcepted error occurred while trying to create the Command Context");
+                throw;
+            }
         }
 
         protected override Task<ImmutableArray<String>> GetCommandsAsync(KuuhakuCommandContext context)
@@ -63,14 +90,13 @@ namespace Kuuhaku.Commands
             if (context.User.IsBot && !this.Options.AllowBots)
                 return Task.FromResult(ImmutableArray<String>.Empty);
 
-            var prefix = "!"; // TODO: Replace with Guild Config ??
+            var prefix = context.Config?.Prefix ?? "";
             var hasPrefix = !prefix.IsEmpty();
 
             var commands = new List<String>();
 
-            // TODO: Replace static string with per-guild configuration
             var potentialCommands = context.Message.Content
-                .Split(new[] {"//"}, StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] {context.Config?.CommandSeperator ?? "//"}, StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => s.Trim());
 
             foreach (var potentialCommand in potentialCommands)
@@ -89,9 +115,10 @@ namespace Kuuhaku.Commands
             if (command.IsEmpty())
                 return "info";
 
+            var prefix = context.Config?.Prefix ?? "";
+
             // Handle the prefix twice as a repeat command, or return the provided command
-            // TODO: Replace with guild config prefix
-            return command.Trim() == "!" ? "repeat" : command;
+            return command.Trim() == prefix ? "repeat" : command;
         }
 
         private (Boolean IsSuccess, Int32 Start) HasPrefix(KuuhakuCommandContext context, String potentialCommand,
@@ -170,23 +197,24 @@ namespace Kuuhaku.Commands
 #endif
 
             // TODO: Stats for commands completed unsuccessfully
+            // TODO: Investigate why this was slowing down commands finishing by 20+ seconds
 
-            if (result is ExceptionResult exceptionResult)
-            {
-
-                using var _ = LogContext.PushProperty("Exception", exceptionResult.Exception);
-                // TODO: Report Exception
-                this.logger.Warning(exceptionResult.Exception,
-                    "An exception occurred during the execution of a command.");
-            }
+            // if (result is ExceptionResult exceptionResult)
+            // {
+            //
+            //     using var _ = LogContext.PushProperty("Exception", exceptionResult.Exception);
+            //     // TODO: Report Exception
+            //     this.logger.Warning(exceptionResult.Exception,
+            //         "An exception occurred during the execution of a command.");
+            // }
 
             if (result is ExecuteResult executeResult)
             {
                 var crap = executeResult.Exception;
                 if (crap != null)
                 {
-                    crap.Data["Context"] = context;
-                    crap.Data["Result"] = result;
+                    // crap.Data["Context"] = context;
+                    // crap.Data["Result"] = result;
                     // TODO: Report Exception
                     this.logger.Warning(crap, "An exeception occurred during the execution of a command.");
                 }

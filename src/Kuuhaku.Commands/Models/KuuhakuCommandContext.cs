@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Kuuhaku.Database.DbModels;
 
 namespace Kuuhaku.Infrastructure.Models
 {
@@ -15,6 +16,9 @@ namespace Kuuhaku.Infrastructure.Models
         public SocketGuild Guild { get; }
 
         public Boolean IsPrivate => this.Guild == null;
+
+        public GuildConfig Config { get; internal set; }
+
         public Stopwatch Stopwatch { get; }
 
         IDiscordClient ICommandContext.Client => this.Client;
