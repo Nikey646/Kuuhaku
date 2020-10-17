@@ -11,6 +11,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using StackExchange.Redis.Extensions.Core.Configuration;
+using StackExchange.Redis.Extensions.Protobuf;
 
 namespace Kuuhaku
 {
@@ -91,6 +93,18 @@ namespace Kuuhaku
                     var commandsFactory = new KuuhakuCommandsFactory();
                     commandsFactory.ConfigureServices(ctx, services);
                     services.AddSingleton<IPluginFactory>(commandsFactory);
+
+                    // TODO: Use information from configuration file
+                    services.AddStackExchangeRedisExtensions<ProtobufSerializer>(new RedisConfiguration
+                    {
+                        Ssl = false,
+                        Hosts = new []
+                        {
+                            new RedisHost { Host = "localhost", Port = 6379 },
+                        },
+                        KeyPrefix = "Kuuhaku__",
+                        Database = 0,
+                    });
                 })
                 .UseStashbox(b =>
                     b.Configure(c =>

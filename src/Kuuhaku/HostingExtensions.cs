@@ -8,6 +8,10 @@ using McMaster.NETCore.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Hosting;
+using StackExchange.Redis.Extensions.Core;
+using StackExchange.Redis.Extensions.Core.Abstractions;
+using StackExchange.Redis.Extensions.Core.Configuration;
+using StackExchange.Redis.Extensions.Core.Implementations;
 
 namespace Kuuhaku
 {
@@ -48,6 +52,23 @@ namespace Kuuhaku
                     }
                 }
             });
+        }
+
+        public static IServiceCollection AddStackExchangeRedisExtensions<T>(this IServiceCollection services, RedisConfiguration redisConfiguration)
+            where T : class, ISerializer, new()
+        {
+            services.AddSingleton<IRedisCacheClient, RedisCacheClient>();
+            services.AddSingleton<IRedisCacheConnectionPoolManager, RedisCacheConnectionPoolManager>();
+            services.AddSingleton<ISerializer, T>();
+
+            services.AddSingleton(provider =>
+            {
+                return provider.GetRequiredService<IRedisCacheClient>().GetDbFromConfiguration();
+            });
+
+            services.AddSingleton(redisConfiguration);
+
+            return services;
         }
     }
 
