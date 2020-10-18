@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Kuuhaku.Commands.Models;
@@ -45,6 +47,36 @@ namespace Kuuhaku.Commands.Classes.Repositories
             var guildConfigKey = $"guildConfig:{guild.Id}";
 
             return this._db.ExistsAsync(guildConfigKey);
+        }
+
+        public async Task AddBlacklistedUser(IGuild guild, IUser user)
+        {
+            var blacklistKey = $"guildConfig:{guild.Id}:userBlacklist";
+
+            await this._db.Database.SetAddAsync(blacklistKey, user.Id);
+        }
+
+        public async Task RemoveBlacklistUser(IGuild guild, IUser user)
+        {
+            var blacklistKey = $"guildConfig:{guild.Id}:userBlacklist";
+
+            await this._db.Database.SetRemoveAsync(blacklistKey, user.Id);
+        }
+
+        public Task<Boolean> IsUserBlacklisted(IGuild guild, IUser user)
+        {
+            var blacklistKey = $"guildConfig:{guild.Id}:userBlacklist";
+
+            return this._db.Database.SetContainsAsync(blacklistKey, user.Id);
+        }
+
+        public async Task<IEnumerable<UInt64>> GetBlacklistedUsers(IGuild guild)
+        {
+            var blacklistKey = $"guildConfig:{guild.Id}:userBlacklist";
+
+            var blacklistedUsers = await this._db.Database.SetMembersAsync(blacklistKey);
+
+            return blacklistedUsers.Select(v => (UInt64) v);
         }
     }
 }

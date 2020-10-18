@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
+using Humanizer;
 using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Models;
 using Kuuhaku.Infrastructure.Classes;
@@ -44,13 +48,7 @@ namespace Kuuhaku.Commands.Modules
         [Command("prefix")]
         public async Task SetPrefixAsync(String newPrefix)
         {
-            var config = await this.GetGuildConfigAsync();
-            if (config == default)
-            {
-                await this.ReplyAsync(
-                    "Failed to find the configuration for your guild. Please report this to the bot owner.");
-                return;
-            }
+            var config = await this._repository.GetAsync(this.Guild);
 
             var oldPrefix = config.Prefix;
             config.Prefix = newPrefix;
@@ -63,9 +61,61 @@ namespace Kuuhaku.Commands.Modules
             await this.ReplyAsync(embed);
         }
 
-        private Task<GuildConfig> GetGuildConfigAsync()
+        [Command("blacklist user")]
+        public async Task BlacklistUser(IUser user)
         {
-            return this._repository.GetAsync(this.Guild);
+            var isBlacklisted = await this._repository.IsUserBlacklisted(this.Guild, user);
+
+            var embed = new KuuhakuEmbedBuilder()
+                .WithColor()
+                .WithFooter(this.Context);
+
+            if (isBlacklisted)
+            {
+                await this._repository.RemoveBlacklistUser(this.Guild, user);
+                await this.ReplyAsync(embed.WithDescription($"{user.Mention} is no longer blacklisted from using commands."));
+            }
+            else
+            {
+                await this._repository.AddBlacklistedUser(this.Guild, user);
+                await this.ReplyAsync(embed.WithDescription($"{user.Mention} is now blacklisted from using commands."));
+            }
         }
+
+        [Command("blacklist user"), Alias("blacklist users", "blacklisted users", "blacklisted user")]
+        public async Task ViewBlacklistedUsers()
+        {
+            var blacklistedUsers =  await this._repository.GetBlacklistedUsers(this.Guild);
+
+            var embed = new KuuhakuEmbedBuilder()
+                .WithColor()
+                .WithFooter(this.Context);
+
+            const String prefixMessage = "The following users are blacklisted from using my commands: ";
+            var messageLength = prefixMessage.Length;
+            var blacklistedMentions = new List<String>();
+
+            foreach (var blacklistedUser in blacklistedUsers.Where(v => v > 0))
+            {
+                var mention = MentionUtils.MentionUser(blacklistedUser);
+                messageLength += mention.Length + 2;
+                if (messageLength > EmbedBuilder.MaxDescriptionLength - 20)
+                {
+                    blacklistedMentions.Add("More…");
+                }
+
+                blacklistedMentions.Add(mention);
+            }
+
+            if (blacklistedMentions.Count == 0)
+            {
+                await this.ReplyAsync(
+                    embed.WithDescription("There are no users who are blacklisted from using my commands"));
+                return;
+            }
+
+            await this.ReplyAsync(embed.WithDescription(prefixMessage + blacklistedMentions.Humanize()));
+        }
+
     }
 }
