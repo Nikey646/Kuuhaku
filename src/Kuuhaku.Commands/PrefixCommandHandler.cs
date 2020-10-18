@@ -25,6 +25,7 @@ namespace Kuuhaku.Commands
 {
     public class PrefixCommandHandler : AbstractCommandHandler<KuuhakuCommandContext>
     {
+        private readonly RepeatRepository _repeatRepository;
         private const String InvlaidInputMessage = "The input does not match any overload.";
         private const String InvalidInputEmoji = "🤔";
 
@@ -36,7 +37,7 @@ namespace Kuuhaku.Commands
             CommandServiceConfig commandServiceConfig, CommandHandlerOptions options,
             CustomModuleBuilder moduleBuilder,
             IEnumerable<IPluginFactory> pluginFactories,
-            ILogger<PrefixCommandHandler> logger, CommandService commandService)
+            ILogger<PrefixCommandHandler> logger, CommandService commandService, RepeatRepository repeatRepository)
             : base(provider, client, commandServiceConfig, moduleBuilder, pluginFactories, logger, commandService)
         {
             this.Options = options;
@@ -44,8 +45,11 @@ namespace Kuuhaku.Commands
 
             this.CommandTriggered += this.CommandTriggeredAsync;
             this.CommandMissing += this.CommandMissingAsync;
+            this.CommandSucceeded += this.CommandSucceededAsync;
             this.CommandFailed += this.CommandFailedAsync;
             this.CommandExecuted += this.CommandExecutedAsync;
+
+            this._repeatRepository = repeatRepository;
         }
 
         protected override void InstallTypeReaders()
@@ -55,7 +59,8 @@ namespace Kuuhaku.Commands
             base.InstallTypeReaders();
         }
 
-        protected override async Task<KuuhakuCommandContext> CreateContextAsync(IServiceProvider provider, SocketUserMessage message, Stopwatch stopwatch)
+        protected override async Task<KuuhakuCommandContext> CreateContextAsync(IServiceProvider provider,
+            SocketUserMessage message, Stopwatch stopwatch)
         {
             // TODO: Cache in memory and work from there.
 
@@ -121,6 +126,9 @@ namespace Kuuhaku.Commands
             return command.Trim() == prefix ? "repeat" : command;
         }
 
+        internal Task InternalCommandLauncher(SocketMessage message)
+            => this.OnMessageReceivedAsync(message);
+
         private (Boolean IsSuccess, Int32 Start) HasPrefix(KuuhakuCommandContext context, String potentialCommand,
             (Boolean HasPrefix, String Prefix) custom)
         {
@@ -173,7 +181,8 @@ namespace Kuuhaku.Commands
             if (socketChannel?.Category != null)
                 channelName = socketChannel.Category.Name + "/" + channelName;
 
-            this.logger.Trace("{user} attempted to trigger a command with the input {message} in {server}/{channel}", context.User, context.Message, context.Guild?.Name ?? "Private", channelName);
+            this.logger.Trace("{user} attempted to trigger a command with the input {message} in {server}/{channel}",
+                context.User, context.Message, context.Guild?.Name ?? "Private", channelName);
             return Task.CompletedTask;
         }
 
@@ -181,6 +190,27 @@ namespace Kuuhaku.Commands
         {
             if (String.Equals(result.ErrorReason, InvlaidInputMessage, StringComparison.OrdinalIgnoreCase))
                 await context.Message.AddReactionAsync(new Emoji(InvalidInputEmoji)).ConfigureAwait(false);
+        }
+
+        private async Task CommandSucceededAsync(KuuhakuCommandContext context, ExecuteResult result)
+        {
+            var prefix = context.Config?.Prefix ?? String.Empty;
+            var hasPrefix = !prefix.IsEmpty();
+
+            var deets = this.HasPrefix(context, context.Message.Content, (hasPrefix, prefix));
+
+            if (deets.IsSuccess)
+            {
+                var command = context.Message.Content.Substring(deets.Start);
+                if (String.Equals(command, "repeat", StringComparison.OrdinalIgnoreCase))
+                    return; // Don't store the repeat command
+
+                if (command.IsEmpty())
+                    return;
+
+                // Reformat the command so that it'll always trigger, even if the prefix is changed.
+                await this._repeatRepository.CreateAsync($"{context.Client.CurrentUser.Mention} {command}", context.Guild, context.User);
+            }
         }
 
         private
@@ -194,6 +224,10 @@ namespace Kuuhaku.Commands
                 return;
 #else
             return Task.CompletedTask;
+#endif
+
+#if DEBUG
+            await this._repeatRepository.CreateAsync(context.Message.Content, context.Guild, context.User);
 #endif
 
             // TODO: Stats for commands completed unsuccessfully
@@ -235,8 +269,10 @@ namespace Kuuhaku.Commands
         private Task CommandExecutedAsync(KuuhakuCommandContext context, IResult result)
         {
             // context.Stopwatch.Stop();
-            this.logger.Trace("{user} finished executing a command with a result of {resultType}, and error of {errorType} in {time}",
-                context.User, result.GetType().Name, result.Error?.ToString() ?? "No Error", context.Stopwatch.Elapsed.ToDuration(true));
+            this.logger.Trace(
+                "{user} finished executing a command with a result of {resultType}, and error of {errorType} in {time}",
+                context.User, result.GetType().Name, result.Error?.ToString() ?? "No Error",
+                context.Stopwatch.Elapsed.ToDuration(true));
             return Task.CompletedTask;
         }
     }
