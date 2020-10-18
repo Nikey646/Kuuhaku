@@ -64,7 +64,6 @@ namespace Kuuhaku.BooruModule.Classes
             {
                 await this._db.AddAsync(tagKey, tags);
                 await this._db.RemoveAsync(historyKey);
-                return;
             }
 
             await this._db.Database.SetAddAsync(historyKey, newId);
