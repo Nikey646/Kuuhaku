@@ -1,11 +1,9 @@
 using System;
-using System.Linq.Expressions;
-using System.Reflection.Metadata;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Kuuhaku.Commands.Internal.Extensions;
-using Kuuhaku.Infrastructure.Models;
+using Kuuhaku.Commands.Models;
 using Serilog.Core;
 using Serilog.Events;
 

@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using StackExchange.Redis.Extensions.Core.Configuration;
-using StackExchange.Redis.Extensions.Protobuf;
+using StackExchange.Redis.Extensions.Newtonsoft;
 
 namespace Kuuhaku
 {
@@ -95,7 +95,7 @@ namespace Kuuhaku
                     services.AddSingleton<IPluginFactory>(commandsFactory);
 
                     // TODO: Use information from configuration file
-                    services.AddStackExchangeRedisExtensions<ProtobufSerializer>(new RedisConfiguration
+                    services.AddStackExchangeRedisExtensions<NewtonsoftSerializer>(new RedisConfiguration
                     {
                         Ssl = false,
                         Hosts = new []

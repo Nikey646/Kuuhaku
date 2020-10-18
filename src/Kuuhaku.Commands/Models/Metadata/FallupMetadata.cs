@@ -1,4 +1,3 @@
-using System;
 using Discord.Commands;
 
 namespace Kuuhaku.Commands.Models.Metadata

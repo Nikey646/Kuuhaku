@@ -4,11 +4,9 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Kuuhaku.Database.DbModels;
+using Kuuhaku.Commands.Interfaces;
 using Kuuhaku.Infrastructure.Classes;
-using Kuuhaku.Infrastructure.Models;
 using Kuuhaku.Infrastructure.Extensions;
-using Kuuhaku.Infrastructure.Interfaces;
 
 namespace Kuuhaku.Commands.Models
 {

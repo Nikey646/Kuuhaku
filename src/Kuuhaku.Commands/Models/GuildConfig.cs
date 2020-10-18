@@ -1,14 +1,9 @@
 using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Kuuhaku.Database.DbModels
+namespace Kuuhaku.Commands.Models
 {
     public class GuildConfig
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid Id { get; set; }
         public UInt64 GuildId { get; set; }
         public String Prefix { get; set; }
         public String CommandSeperator { get; set; }

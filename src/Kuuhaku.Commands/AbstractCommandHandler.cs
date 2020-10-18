@@ -154,7 +154,7 @@ namespace Kuuhaku.Commands
         protected abstract Task<TCommandContext> CreateContextAsync(IServiceProvider serviceProvider, SocketUserMessage message, Stopwatch stopwatch);
         protected abstract Task<ImmutableArray<String>> GetCommandsAsync(TCommandContext context);
 
-        private async Task OnMessageReceivedAsync(SocketUserMessage message)
+        protected async Task OnMessageReceivedAsync(SocketUserMessage message)
         {
             IResult result = null;
             using var scope = this._provider.CreateScope();
@@ -222,7 +222,7 @@ namespace Kuuhaku.Commands
             }
         }
 
-        private Task OnMessageReceivedAsync(SocketMessage message)
+        protected Task OnMessageReceivedAsync(SocketMessage message)
         {
             if (!(message is SocketUserMessage userMessage))
                 return Task.CompletedTask;
@@ -231,7 +231,7 @@ namespace Kuuhaku.Commands
             return Task.CompletedTask;
         }
 
-        private async Task<(Boolean isSuccess, IResult result, CommandMatch? command)> FindBestCommandAsync(
+        protected async Task<(Boolean isSuccess, IResult result, CommandMatch? command)> FindBestCommandAsync(
             TCommandContext context,
             SearchResult search, MultiMatchHandling multiMatchHandling = MultiMatchHandling.Exception)
         {
