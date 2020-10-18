@@ -88,10 +88,14 @@ namespace Kuuhaku.Commands
             }
         }
 
-        protected override Task<ImmutableArray<String>> GetCommandsAsync(KuuhakuCommandContext context)
+        protected override async Task<ImmutableArray<String>> GetCommandsAsync(KuuhakuCommandContext context)
         {
             if (context.User.IsBot && !this.Options.AllowBots)
-                return Task.FromResult(ImmutableArray<String>.Empty);
+                return ImmutableArray<String>.Empty;
+
+            var isBlacklisted = await this._guildConfigRepository.IsUserBlacklisted(context.Guild, context.User);
+            if (isBlacklisted)
+                return ImmutableArray<String>.Empty;
 
             var prefix = context.Config?.Prefix ?? "";
             var hasPrefix = !prefix.IsEmpty();
@@ -109,7 +113,7 @@ namespace Kuuhaku.Commands
                     commands.Add(potentialCommand.Substring(Math.Max(0, prefixDetails.Start)));
             }
 
-            return Task.FromResult(commands.ToImmutableArray());
+            return commands.ToImmutableArray();
         }
 
         protected override String FilterCommandString(KuuhakuCommandContext context, String command)
@@ -200,7 +204,8 @@ namespace Kuuhaku.Commands
             if (deets.IsSuccess)
             {
                 var command = context.Message.Content.Substring(deets.Start);
-                if (String.Equals(command, "repeat", StringComparison.OrdinalIgnoreCase))
+                if (hasPrefix && String.Equals(command, prefix, StringComparison.OrdinalIgnoreCase) ||
+                    String.Equals(command, "repeat", StringComparison.OrdinalIgnoreCase))
                     return; // Don't store the repeat command
 
                 if (command.IsEmpty())
