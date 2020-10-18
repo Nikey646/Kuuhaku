@@ -1,57 +1,53 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Kuuhaku.Database;
-using Kuuhaku.Database.DbModels;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Serilog;
+using Discord;
+using Kuuhaku.ReminderModule.Models;
+using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace Kuuhaku.ReminderModule.Classes
 {
-    public class ReminderRepository : IDisposable
+    public class ReminderRepository
     {
-        private readonly IServiceScope _serviceScope;
-        private readonly DisgustingGodContext _context;
+        private IRedisDatabase _db;
 
-        public ReminderRepository(IServiceProvider provider)
+        public ReminderRepository(IRedisCacheClient redis)
         {
-            this._serviceScope = provider.CreateScope();
-            this._context = this._serviceScope.ServiceProvider.GetService<DisgustingGodContext>();
+            this._db = redis.Db0;
         }
 
-        public Task<List<Reminder>> GetRemindersAsync(CancellationToken ct = default)
+        public async Task<ReminderDto> CreateAsync(IGuild guild, IMessage message, IUser user, DateTime when, String what)
         {
-            return this._context.Reminders
-                .AsQueryable()
-                .Where(r => r.IsActive)
-                .ToListAsync(ct);
+            var reminder = new ReminderDto(guild.Id, message.Channel.Id, message.Id, user.Id, when, what);
+
+            await this.UpdateAsync(reminder);
+            return reminder;
         }
 
-        public async Task SetReminderActiveAsync(Guid id, Boolean isActive, CancellationToken ct = default)
+        public async Task UpdateAsync(ReminderDto reminder)
         {
-            var reminder = await this._context.Reminders
-                .AsQueryable()
-                .Where(r => r.Id == id)
-                .FirstOrDefaultAsync(ct);
-            reminder.IsActive = isActive;
-            await this._context.SaveChangesAsync(ct);
+            var reminderKey = $"reminders:{reminder.GuildId}:{reminder.ChannelId}:{reminder.MessageId}";
+
+            await this._db.AddAsync(reminderKey, reminder);
         }
 
-        public async Task<Reminder> AddReminderAsync(Reminder reminder, CancellationToken ct = default)
+        public Task<ReminderDto> GetAsync(IGuild guild, IMessage message)
+            => this.GetAsync(guild.Id, message.Channel.Id, message.Id);
+
+        public Task<ReminderDto> GetAsync(UInt64 guildId, UInt64 channelId, UInt64 messageId)
         {
-            var reminderEntry = await this._context.Reminders.AddAsync(reminder, ct);
-            await this._context.SaveChangesAsync(ct);
-            return reminderEntry.Entity; // TODO: Should return the EntityEntry itself??
+            var reminderKey = $"reminders:{guildId}:{channelId}:{messageId}";
+
+            return this._db.GetAsync<ReminderDto>(reminderKey);
         }
 
-        public void Dispose()
+        public async Task<IEnumerable<ReminderDto>> GetAllAsync()
         {
-            Log.Fatal("Disposing of ReminderRepository");
-            this._serviceScope?.Dispose();
-            this._context?.Dispose();
+            const String reminderPattern = "reminders:*";
+            var reminderKeys = await this._db.SearchKeysAsync(reminderPattern);
+
+            var reminders = await this._db.GetAllAsync<ReminderDto>(reminderKeys);
+            return reminders.Values;
         }
     }
 }

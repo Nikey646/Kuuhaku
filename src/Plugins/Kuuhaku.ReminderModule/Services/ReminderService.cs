@@ -6,11 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Kuuhaku.Database.DbModels;
+using Kuuhaku.Commands.Models;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Models;
 using Kuuhaku.ReminderModule.Classes;
+using Kuuhaku.ReminderModule.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -18,49 +19,43 @@ namespace Kuuhaku.ReminderModule.Services
 {
     public class ReminderService : BackgroundService
     {
-        private readonly ReminderRepository _repository;
         private readonly DiscordSocketClient _client;
+        private readonly ReminderRepository _repository;
         private readonly ILogger<ReminderService> _logger;
-        private readonly List<Reminder> _reminders;
+        private List<ReminderDto> _reminders;
 
-        private static ReminderService _instance { get; set; }
-
-        public ReminderService(ReminderRepository repository, DiscordSocketClient client, ILogger<ReminderService> logger)
+        public ReminderService(DiscordSocketClient client, ReminderRepository repository, ILogger<ReminderService> logger)
         {
-            this._repository = repository ?? throw new ArgumentNullException(nameof(repository));
             this._client = client;
-            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this._reminders = new List<Reminder>();
+            this._repository = repository;
+            this._logger = logger;
+            this._reminders = new List<ReminderDto>();
         }
 
-        public async Task AddNewReminder(Reminder reminder)
+        public async Task AddNewReminder(KuuhakuCommandContext context, DateTime when, String what)
         {
-            if (reminder == null)
-                throw new ArgumentNullException(nameof(reminder));
-
-            var insertedReminder = await this._repository.AddReminderAsync(reminder);
-            _instance._reminders.Add(insertedReminder);
+            var reminder = await this._repository.CreateAsync(context.Guild, context.Message, context.User, when, what);
+            this._reminders.Add(reminder);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            this._logger.Info("Reminder Service Started");
-            _instance = this;
+            this._logger.Info("Reminder service Started");
 
-            var reminders = await this._repository.GetRemindersAsync(stoppingToken);
+            var reminders = await this._repository.GetAllAsync();
             this._reminders.AddRange(reminders);
+
             while (!stoppingToken.IsCancellationRequested)
             {
-                await this.ReminderTick(stoppingToken);
-                // Wait 1 second before checking again.
-                // This can result in 'drifting', but that's fine.
+                await this.CheckReminders(stoppingToken);
+
                 await Task.Delay(TimeSpan.FromSeconds(1));
             }
 
-            this._logger.Info("Reminder Service Stopping");
+            this._logger.Info("Reminder service Stopping");
         }
 
-        private async Task ReminderTick(CancellationToken ct)
+        private async Task CheckReminders(CancellationToken ct)
         {
             if (this._client.ConnectionState != ConnectionState.Connected)
                 return; // Don't try to process.
@@ -90,24 +85,21 @@ namespace Kuuhaku.ReminderModule.Services
                 await reminderChannel.SendMessageAsync(MentionUtils.MentionUser(reminder.UserId), reminderMessage, ct);
 
                 reminder.IsActive = false;
-                await this._repository.SetReminderActiveAsync(reminder.Id, false, ct);
+                await this._repository.UpdateAsync(reminder);
                 this._reminders.Remove(reminder);
             }
         }
 
-        private IEnumerable<Reminder> GetExpiredReminders()
+        private IEnumerable<ReminderDto> GetExpiredReminders()
             => this._reminders.Where(r => r.IsActive && DateTime.UtcNow > r.RemindAt);
 
-        private async Task<IMessageChannel> GetChannelAsync(Reminder reminder)
+        private Task<IMessageChannel> GetChannelAsync(ReminderDto reminder)
         {
-            if (!reminder.GuildId.HasValue)
-                return await this._client.GetDMChannelAsync(reminder.ChannelId);
-
-            var guild = this._client.GetGuild(reminder.GuildId.Value);
-            return guild.GetTextChannel(reminder.ChannelId);
+            var guild = this._client.GetGuild(reminder.GuildId);
+            return Task.FromResult<IMessageChannel>(guild.GetTextChannel(reminder.ChannelId));
         }
 
-        private (Boolean isLate, TimeSpan howLate) CheckIfLate(Reminder reminder)
+        private (Boolean isLate, TimeSpan howLate) CheckIfLate(ReminderDto reminder)
         {
             var currentTime = DateTime.UtcNow;
             var expectedTime = reminder.RemindAt;
@@ -120,14 +112,10 @@ namespace Kuuhaku.ReminderModule.Services
                 : (false, TimeSpan.Zero);
         }
 
-        private IUser GetCurrentUser(Reminder reminder)
+        private IUser GetCurrentUser(ReminderDto reminder)
         {
-            if (!reminder.GuildId.HasValue)
-                return this._client.CurrentUser;
-
-            var guild = this._client.GetGuild(reminder.GuildId.Value);
+            var guild = this._client.GetGuild(reminder.GuildId);
             return guild.CurrentUser;
-
         }
     }
 }
