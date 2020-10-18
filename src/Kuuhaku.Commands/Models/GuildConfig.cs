@@ -6,9 +6,6 @@ namespace Kuuhaku.Database.DbModels
 {
     public class GuildConfig
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid Id { get; set; }
         public UInt64 GuildId { get; set; }
         public String Prefix { get; set; }
         public String CommandSeperator { get; set; }
