@@ -25,6 +25,7 @@ namespace Kuuhaku.Commands
 {
     public class PrefixCommandHandler : AbstractCommandHandler<KuuhakuCommandContext>
     {
+        private readonly GuildConfigRepository _guildConfigRepository;
         private readonly RepeatRepository _repeatRepository;
         private const String InvlaidInputMessage = "The input does not match any overload.";
         private const String InvalidInputEmoji = "🤔";
@@ -37,7 +38,7 @@ namespace Kuuhaku.Commands
             CommandServiceConfig commandServiceConfig, CommandHandlerOptions options,
             CustomModuleBuilder moduleBuilder,
             IEnumerable<IPluginFactory> pluginFactories,
-            ILogger<PrefixCommandHandler> logger, CommandService commandService, RepeatRepository repeatRepository)
+            ILogger<PrefixCommandHandler> logger, CommandService commandService, GuildConfigRepository guildConfigRepository, RepeatRepository repeatRepository)
             : base(provider, client, commandServiceConfig, moduleBuilder, pluginFactories, logger, commandService)
         {
             this.Options = options;
@@ -49,6 +50,7 @@ namespace Kuuhaku.Commands
             this.CommandFailed += this.CommandFailedAsync;
             this.CommandExecuted += this.CommandExecutedAsync;
 
+            this._guildConfigRepository = guildConfigRepository;
             this._repeatRepository = repeatRepository;
         }
 
@@ -71,9 +73,7 @@ namespace Kuuhaku.Commands
 
             try
             {
-                var repo = provider.GetService<GuildConfigRepository>();
-                var configs = await repo.FindAsync(c => c.GuildId == context.Guild.Id);
-                var config = configs.FirstOrDefault();
+                var config = await this._guildConfigRepository.GetAsync(context.Guild);
 
                 // This should only occur when bots are sending messages immediately as a user joins,
                 // and we receive one before the NewGuildWatcher stores the config.
