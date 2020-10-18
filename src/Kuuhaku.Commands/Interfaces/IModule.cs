@@ -1,7 +1,7 @@
 using Discord.Commands;
-using Kuuhaku.Infrastructure.Models;
+using Kuuhaku.Commands.Models;
 
-namespace Kuuhaku.Infrastructure.Interfaces
+namespace Kuuhaku.Commands.Interfaces
 {
     public interface IModule
     {

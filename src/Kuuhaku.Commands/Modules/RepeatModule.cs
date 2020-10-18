@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using Discord.Rest;
 using Discord.WebSocket;
 using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Models;
-using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace Kuuhaku.Commands.Modules
 {

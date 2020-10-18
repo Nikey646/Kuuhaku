@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Discord.Commands;
 using Kuuhaku.Commands.Interfaces;
 using Kuuhaku.Commands.Models.Metadata;
 using Kuuhaku.Infrastructure.Extensions;

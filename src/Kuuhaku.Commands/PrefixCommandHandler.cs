@@ -11,15 +11,13 @@ using Humanizer;
 using Kuuhaku.Commands.Classes;
 using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Classes.TypeReaders;
+using Kuuhaku.Commands.Models;
 using Kuuhaku.Commands.Options;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Infrastructure.Interfaces;
 using Kuuhaku.Infrastructure.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Serilog;
-using Serilog.Context;
 
 namespace Kuuhaku.Commands
 {

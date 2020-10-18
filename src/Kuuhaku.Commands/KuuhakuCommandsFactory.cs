@@ -5,7 +5,6 @@ using Kuuhaku.Commands.Classes;
 using Kuuhaku.Commands.Classes.ModuleMetadataProviders;
 using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Interfaces;
-using Kuuhaku.Commands.Models;
 using Kuuhaku.Commands.Options;
 using Kuuhaku.Commands.Services;
 using Kuuhaku.Infrastructure.Interfaces;

@@ -3,9 +3,8 @@ using System.Diagnostics;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Kuuhaku.Database.DbModels;
 
-namespace Kuuhaku.Infrastructure.Models
+namespace Kuuhaku.Commands.Models
 {
     public class KuuhakuCommandContext : ICommandContext
     {

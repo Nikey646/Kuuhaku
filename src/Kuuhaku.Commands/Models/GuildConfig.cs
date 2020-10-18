@@ -1,8 +1,6 @@
 using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Kuuhaku.Database.DbModels
+namespace Kuuhaku.Commands.Models
 {
     public class GuildConfig
     {

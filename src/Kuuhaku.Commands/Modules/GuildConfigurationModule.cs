@@ -1,10 +1,8 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Models;
-using Kuuhaku.Database.DbModels;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
 

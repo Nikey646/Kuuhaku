@@ -1,10 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Discord;
-using Kuuhaku.Database;
-using Kuuhaku.Database.DbModels;
-using Kuuhaku.Infrastructure.Classes;
-using Microsoft.EntityFrameworkCore;
+using Kuuhaku.Commands.Models;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace Kuuhaku.Commands.Classes.Repositories

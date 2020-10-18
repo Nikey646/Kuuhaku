@@ -1,12 +1,7 @@
-using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Kuuhaku.Commands.Classes.Repositories;
-using Kuuhaku.Database;
-using Kuuhaku.Database.DbModels;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace Kuuhaku.Commands.Services
