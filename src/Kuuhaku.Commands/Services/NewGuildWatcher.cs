@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
+using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Database;
 using Kuuhaku.Database.DbModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,13 +13,13 @@ namespace Kuuhaku.Commands.Services
 {
     public class NewGuildWatcher : IHostedService
     {
+        private readonly GuildConfigRepository _repository;
         private readonly DiscordSocketClient _discordClient;
-        private readonly IServiceProvider _serviceProvider;
 
-        public NewGuildWatcher(DiscordSocketClient discordClient, IServiceProvider serviceProvider)
+        public NewGuildWatcher(GuildConfigRepository repository, DiscordSocketClient discordClient)
         {
+            this._repository = repository;
             this._discordClient = discordClient;
-            this._serviceProvider = serviceProvider;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -35,26 +36,17 @@ namespace Kuuhaku.Commands.Services
 
         private Task OnGuildAvailableAsync(SocketGuild guild)
         {
-            Task.Factory.StartNew(async () => await this.GuildAvailableAsync(guild).ConfigureAwait(false));
+            Task.Factory.StartNew(() => this.GuildAvailableAsync(guild).ConfigureAwait(false));
             return Task.CompletedTask;
         }
 
         private async Task GuildAvailableAsync(SocketGuild guild)
         {
-            using var scope = this._serviceProvider.CreateScope();
-            await using var dbContext = scope.ServiceProvider.GetService<DisgustingGodContext>();
-
-            var set = dbContext.GuildConfigs;
-
-            // TODO: Should this be cached in memory to prevent excessive database polling
-            // in the event of guilds becoming available again?
-
-            if (set.Any(g => g.GuildId == guild.Id))
-                return;
-
-            var guildConfig = new GuildConfig(guild.Id);
-            await set.AddAsync(guildConfig);
-            await dbContext.SaveChangesAsync();
+            var configExists = await this._repository.ExistsAsync(guild);
+            if (!configExists)
+            {
+                await this._repository.CreateAsync(guild);
+            }
         }
     }
 }
