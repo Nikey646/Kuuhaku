@@ -200,7 +200,8 @@ namespace Kuuhaku.Commands
             if (deets.IsSuccess)
             {
                 var command = context.Message.Content.Substring(deets.Start);
-                if (String.Equals(command, "repeat", StringComparison.OrdinalIgnoreCase))
+                if (hasPrefix && String.Equals(command, prefix, StringComparison.OrdinalIgnoreCase) ||
+                    String.Equals(command, "repeat", StringComparison.OrdinalIgnoreCase))
                     return; // Don't store the repeat command
 
                 if (command.IsEmpty())
