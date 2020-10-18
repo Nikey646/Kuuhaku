@@ -119,6 +119,15 @@ namespace Kuuhaku.BooruModule.Modules
 
         private EmbedFieldBuilder CreateTagsField(ICollection<Tag> tags, SourceBooru sauce)
         {
+            String PostUrl(String booruId)
+            {
+                return booruId switch
+                {
+                    "yandere" => "post",
+                    "konachan" => "post",
+                    _ => "posts",
+                };
+            }
             String EscapeLink(String input)
                 => input.Replace("[", "\\[")
                     .Replace("]", "\\]")
@@ -143,7 +152,7 @@ namespace Kuuhaku.BooruModule.Modules
                 .ThenBy(t => t.Name))
             {
                 var mdLink = Linkify(CustomTitleCaseTransformer.Instance.Transform(tag.Name),
-                    $"{sauce.BaseUri}posts?tags={EscapeLink(tag.Name.UrlEncode())}");
+                    $"{sauce.BaseUri}{PostUrl(sauce.Identifier)}?tags={EscapeLink(tag.Name.UrlEncode())}");
 
                 length += mdLink.Length + 2; // +2 for ", " after each.
                 if (length >= 1000) // Leave 24 characters spare if this condition is true.
