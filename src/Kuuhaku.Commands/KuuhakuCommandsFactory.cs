@@ -3,7 +3,9 @@ using System.IO;
 using Discord.Commands;
 using Kuuhaku.Commands.Classes;
 using Kuuhaku.Commands.Classes.ModuleMetadataProviders;
+using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Interfaces;
+using Kuuhaku.Commands.Models;
 using Kuuhaku.Commands.Options;
 using Kuuhaku.Commands.Services;
 using Kuuhaku.Infrastructure.Interfaces;
@@ -34,7 +36,10 @@ namespace Kuuhaku.Commands
             services.AddSingleton(s =>
                 new CommandService(s.GetRequiredService<CommandServiceConfig>()));
 
-            services.AddHostedService<PrefixCommandHandler>();
+            services.AddSingleton<RepeatRepository>();
+
+            services.AddSingleton<PrefixCommandHandler>();
+            services.AddSingleton<IHostedService, PrefixCommandHandler>();
         }
 
         (String configKey, Object defaultValue) IPluginFactory.ConfigureDefaultConfiguration() =>
