@@ -116,6 +116,15 @@ namespace Kuuhaku.Commands
             return commands.ToImmutableArray();
         }
 
+        protected override async Task<Boolean> IsCommandBlacklisted(KuuhakuCommandContext context, CommandInfo command)
+        {
+            var moduleName = command.Module.Name;
+            var blacklistedModules = await this._guildConfigRepository.GetBlacklistedModules(context.Guild);
+            var quickBlacklistModules = new HashSet<String>(blacklistedModules);
+
+            return quickBlacklistModules.Contains(moduleName);
+        }
+
         protected override String FilterCommandString(KuuhakuCommandContext context, String command)
         {
             // Handle a prefix but no command as the info command
