@@ -16,10 +16,12 @@ namespace Kuuhaku.Commands.Modules
     public class GuildConfigurationModule : KuuhakuModule
     {
         private readonly GuildConfigRepository _repository;
+        private readonly CommandService _commandService;
 
-        public GuildConfigurationModule(GuildConfigRepository repository)
+        public GuildConfigurationModule(GuildConfigRepository repository, CommandService commandService)
         {
             this._repository = repository;
+            this._commandService = commandService;
         }
 
         [Command, Alias("info")]
@@ -115,6 +117,69 @@ namespace Kuuhaku.Commands.Modules
             }
 
             await this.ReplyAsync(embed.WithDescription(prefixMessage + blacklistedMentions.Humanize()));
+        }
+
+        private String[] PermanentModules = new[] {"GuildConfigurationModule", "StandardModule"};
+
+        [Command("blacklist module")]
+        public async Task BlacklistModule(String moduleName)
+        {
+            var input = moduleName;
+            moduleName = moduleName.Dehumanize();
+            if (!moduleName.EndsWith("Module", StringComparison.OrdinalIgnoreCase))
+                moduleName += "Module";
+
+            var embed = new KuuhakuEmbedBuilder()
+                .WithColor()
+                .WithFooter(this.Context);
+
+            var modules = this._commandService.Modules.Select(m => m.Name);
+            if (!modules.Contains(moduleName, StringComparer.OrdinalIgnoreCase))
+            {
+                await this.ReplyAsync(
+                    embed.WithDescription($"There is no such module as {input.MdBold().Quote()}"));
+                return;
+            }
+
+            var friendlyName = moduleName.Replace("Module", "").Humanize(LetterCasing.Title);
+
+            if (this.PermanentModules.Contains(moduleName))
+            {
+                await this.ReplyAsync(embed.WithDescription($"You cannot disable {friendlyName.MdBold().Quote()}"));
+                return;
+            }
+
+            var isBlacklisted = await this._repository.IsModuleBlacklisted(this.Guild, moduleName);
+            if (!isBlacklisted)
+            {
+                await this._repository.AddBlacklistedModule(this.Guild, moduleName);
+                await this.ReplyAsync(embed.WithDescription(
+                    $"{friendlyName.MdBold().Quote()} has now been blacklisted.\n" +
+                    $"Users in this server will no longer be able to use it."));
+            }
+            else
+            {
+                await this._repository.RemoveBlacklistModule(this.Guild, moduleName);
+                await this.ReplyAsync(embed.WithDescription(
+                    $"{friendlyName.MdBold().Quote()} has is no longer blacklisted.\n" +
+                    $"Users in this server will now be able to use it."));
+            }
+        }
+
+        [Command("blacklist module"), Alias("blacklist modules", "blacklisted modules", "blacklisted module")]
+        public async Task BlacklistModule()
+        {
+            var availableModules = this._commandService.Modules.Select(m => m.Name.Replace("Module", ""));
+            var blacklistedModules = await this._repository.GetBlacklistedModules(this.Guild);
+
+            var embed = new KuuhakuEmbedBuilder()
+                .WithColor()
+                .WithDescription(
+                    $"The available Modules are: \n{availableModules.Humanize(m => m.Humanize(LetterCasing.Title).MdBold())}\n\n" +
+                    $"The currently Blacklisted Modules are: \n{blacklistedModules.Humanize(m => m.MdBold())}")
+                .WithFooter(this.Context);
+
+            await this.ReplyAsync(embed);
         }
 
     }

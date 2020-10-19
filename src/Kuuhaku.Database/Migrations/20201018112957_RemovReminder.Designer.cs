@@ -3,14 +3,16 @@ using System;
 using Kuuhaku.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Kuuhaku.Database.Migrations
 {
     [DbContext(typeof(DisgustingGodContext))]
-    partial class DisgustingGodContextModelSnapshot : ModelSnapshot
+    [Migration("20201018112957_RemovReminder")]
+    partial class RemovReminder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

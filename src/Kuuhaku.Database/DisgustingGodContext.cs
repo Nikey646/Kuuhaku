@@ -12,9 +12,6 @@ namespace Kuuhaku.Database
 {
     public class DisgustingGodContext : DbContext
     {
-        public DbSet<Reminder> Reminders { get; set; }
-
-
         public DbSet<UserRoleLocation> UserRoleLocations { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
 

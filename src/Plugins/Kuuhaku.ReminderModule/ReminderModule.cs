@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -39,6 +40,7 @@ namespace Kuuhaku.ReminderModule
             }
 
             var when = response.Content;
+            var processingTime = Stopwatch.StartNew();
 
             var actualWhen = HumanLikeParser.Parse(when);
 
@@ -49,11 +51,15 @@ namespace Kuuhaku.ReminderModule
                 return;
             }
 
-            var remindDuration = actualWhen.Value.Subtract(DateTime.UtcNow);
 
             this._logger.Trace("Creating reminder for {@time} with message: {what}", actualWhen, what);
-            var reminder = new Reminder(this.IsPrivate ? null : this.Guild?.Id, this.Channel.Id, this.User.Id, actualWhen.Value, what);
-            await this._service.AddNewReminder(reminder);
+            await this._service.AddNewReminder(this.Context, actualWhen.Value, what);
+
+            var remindDuration = actualWhen.Value.Subtract(DateTime.UtcNow)
+                // Add how long it took since we get the time to wait
+                .Add(TimeSpan.FromMilliseconds(processingTime.ElapsedMilliseconds))
+                // Add in the rough latency of the discord client.
+                .Add(TimeSpan.FromMilliseconds(this.Client.Latency));
 
             await this.ReplyAsync($"I will remind you in {remindDuration.Humanize()}.");
         }

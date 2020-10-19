@@ -151,6 +151,9 @@ namespace Kuuhaku.Commands
         protected virtual String FilterCommandString(TCommandContext context, String command)
             => command;
 
+        protected virtual Task<Boolean> IsCommandBlacklisted(TCommandContext context, CommandInfo command)
+            => Task.FromResult(false);
+
         protected abstract Task<TCommandContext> CreateContextAsync(IServiceProvider serviceProvider, SocketUserMessage message, Stopwatch stopwatch);
         protected abstract Task<ImmutableArray<String>> GetCommandsAsync(TCommandContext context);
 
@@ -195,6 +198,14 @@ namespace Kuuhaku.Commands
                     var commandMatch = possibleMatch.Value;
                     this.logger.Trace("Found the {commandName} command from the {moduleName} module for {user}",
                         commandMatch.Command.Name, commandMatch.Command.Module.Name, context.User);
+
+                    var isBlacklisted = await this.IsCommandBlacklisted(context, commandMatch.Command);
+                    if (isBlacklisted)
+                    {
+                        await this._commandFailed.InvokeAsync(context,
+                            new BlacklistedResult(CommandError.UnmetPrecondition, "The Command was Blacklisted"));
+                        return;
+                    }
 
                     // TODO: Create a Harmony Plugin to automatically wrap methods that use a certain method to have the typing disposable
                     // TODO: TypingNotifier
@@ -327,6 +338,12 @@ namespace Kuuhaku.Commands
             {
                 this.Exception = crap;
             }
+        }
+
+        public class BlacklistedResult : RuntimeResult
+        {
+            public BlacklistedResult(CommandError? error, String reason) : base(error, reason)
+            { }
         }
     }
 }

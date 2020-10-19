@@ -49,6 +49,36 @@ namespace Kuuhaku.Commands.Classes.Repositories
             return this._db.ExistsAsync(guildConfigKey);
         }
 
+        public Task AddBlacklistedModule(IGuild guild, String moduleName)
+        {
+            var blacklistKey = $"guildConfig:{guild.Id}:moduleBlacklist";
+
+            return this._db.Database.SetAddAsync(blacklistKey, moduleName);
+        }
+
+        public Task RemoveBlacklistModule(IGuild guild, String moduleName)
+        {
+            var blacklistKey = $"guildConfig:{guild.Id}:moduleBlacklist";
+
+            return this._db.Database.SetRemoveAsync(blacklistKey, moduleName);
+        }
+
+        public Task<Boolean> IsModuleBlacklisted(IGuild guild, String moduleName)
+        {
+            var blacklistKey = $"guildConfig:{guild.Id}:moduleBlacklist";
+
+            return this._db.Database.SetContainsAsync(blacklistKey, moduleName);
+        }
+
+        public async Task<IEnumerable<String>> GetBlacklistedModules(IGuild guild)
+        {
+            var blacklistKey = $"guildConfig:{guild.Id}:moduleBlacklist";
+
+            var blacklistedModules = await this._db.Database.SetMembersAsync(blacklistKey);
+
+            return blacklistedModules.Select(v => (String) v);
+        }
+
         public async Task AddBlacklistedUser(IGuild guild, IUser user)
         {
             var blacklistKey = $"guildConfig:{guild.Id}:userBlacklist";
