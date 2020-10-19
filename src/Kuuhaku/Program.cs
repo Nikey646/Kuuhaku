@@ -5,7 +5,6 @@ using Discord;
 using Discord.Addons.Hosting;
 using Discord.WebSocket;
 using Kuuhaku.Commands;
-using Kuuhaku.Database;
 using Kuuhaku.Infrastructure.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -86,10 +85,6 @@ namespace Kuuhaku
                 })
                 .ConfigureServices((ctx, services) =>
                 {
-                    var databaseFactory = new KuuhakuDatabaseFactory();
-                    databaseFactory.ConfigureServices(ctx, services);
-                    services.AddSingleton<IPluginFactory>(databaseFactory);
-
                     var commandsFactory = new KuuhakuCommandsFactory();
                     commandsFactory.ConfigureServices(ctx, services);
                     services.AddSingleton<IPluginFactory>(commandsFactory);

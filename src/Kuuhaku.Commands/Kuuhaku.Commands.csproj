@@ -5,7 +5,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Kuuhaku.Database\Kuuhaku.Database.csproj" />
       <ProjectReference Include="..\Kuuhaku.Infrastructure\Kuuhaku.Infrastructure.csproj" />
     </ItemGroup>
 
