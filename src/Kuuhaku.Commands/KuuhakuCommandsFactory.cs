@@ -37,6 +37,7 @@ namespace Kuuhaku.Commands
 
             services.AddSingleton<RepeatRepository>();
             services.AddSingleton<GuildConfigRepository>();
+            services.AddSingleton<PermissionsRepository>();
 
             services.AddSingleton<PrefixCommandHandler>();
             services.AddSingleton<IHostedService, PrefixCommandHandler>();
