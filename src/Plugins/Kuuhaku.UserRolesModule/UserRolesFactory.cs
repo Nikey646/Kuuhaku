@@ -11,10 +11,15 @@ namespace Kuuhaku.UserRolesModule
     {
         public void ConfigureServices(HostBuilderContext ctx, IServiceCollection services)
         {
-            services.AddScoped<UserRolesUoW>();
-            services.AddScoped<UserRolesRepository>();
+            // services.AddScoped<UserRolesUoW>();
+            // services.AddScoped<UserRolesRepository>();
 
-            services.AddHostedService<UserRoleService>();
+            services.AddSingleton<UserRolesRepository>();
+
+            services.AddSingleton<UserRoleService>();
+            services.AddSingleton<IHostedService, UserRoleService>(s => s.GetRequiredService<UserRoleService>());
+
+            // services.AddHostedService<UserRoleService>();
         }
     }
 }
