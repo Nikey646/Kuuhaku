@@ -15,6 +15,9 @@ namespace Kuuhaku.Commands.Modules
     [Group("config"), RequireContext(ContextType.Guild)]
     public class GuildConfigurationModule : KuuhakuModule
     {
+
+        private readonly String[] PermanentModules = new[] {"GuildConfigurationModule", "StandardModule", "PermissionsModule"};
+
         private readonly GuildConfigRepository _repository;
         private readonly CommandService _commandService;
 
@@ -118,8 +121,6 @@ namespace Kuuhaku.Commands.Modules
 
             await this.ReplyAsync(embed.WithDescription(prefixMessage + blacklistedMentions.Humanize()));
         }
-
-        private String[] PermanentModules = new[] {"GuildConfigurationModule", "StandardModule"};
 
         [Command("blacklist module")]
         public async Task BlacklistModule(String moduleName)

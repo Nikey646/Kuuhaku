@@ -6,14 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Kuuhaku.Database.DbModels;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.UserRolesModule.Classes;
 using Kuuhaku.UserRolesModule.Models;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
-using Microsoft.EntityFrameworkCore.Update;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

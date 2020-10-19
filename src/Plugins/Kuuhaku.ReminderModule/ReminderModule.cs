@@ -6,7 +6,6 @@ using Discord.Commands;
 using Humanizer;
 using Kuuhaku.Commands.Interfaces;
 using Kuuhaku.Commands.Models;
-using Kuuhaku.Database.DbModels;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.ReminderModule.Services;
 using Microsoft.Extensions.Logging;
