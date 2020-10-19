@@ -47,19 +47,27 @@ namespace Kuuhaku.UserRolesModule.Services
 
             this._client.MessageUpdated += this.MessageUpdatedAsync;
 
-            var userRoles = this._userRoles
-                .Where(r => r.MessageId.HasValue)
-                .GroupBy(r => r.MessageId.Value)
-                .Select(r => r.First());
-
-            foreach (var userRole in userRoles)
+            async Task SyncAsync()
             {
-                var guild = this._client.GetGuild(userRole.GuildId);
-                var channel = guild.GetTextChannel(userRole.ChannelId);
-                // ReSharper disable once PossibleInvalidOperationException
-                var message = await channel.GetMessageAsync(userRole.MessageId.Value) as IUserMessage;
-                await this.SyncReactionsAndRolesAsync(message);
+
+                var userRoles = this._userRoles
+                    .Where(r => r.MessageId.HasValue)
+                    .GroupBy(r => r.MessageId.Value)
+                    .Select(r => r.First());
+
+                foreach (var userRole in userRoles)
+                {
+                    var guild = this._client.GetGuild(userRole.GuildId);
+                    var channel = guild.GetTextChannel(userRole.ChannelId);
+                    // ReSharper disable once PossibleInvalidOperationException
+                    var message = await channel.GetMessageAsync(userRole.MessageId.Value) as IUserMessage;
+                    await this.SyncReactionsAndRolesAsync(message);
+                }
+
+                this._client.Ready -= SyncAsync;
             }
+
+            this._client.Ready += SyncAsync;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
@@ -190,6 +198,9 @@ namespace Kuuhaku.UserRolesModule.Services
         private async Task OnReactionAddedAsync(Cacheable<IUserMessage, UInt64> message, ISocketMessageChannel channel,
             SocketReaction reaction)
         {
+            if (reaction.UserId == this._client.CurrentUser.Id)
+                return;
+
             var (user, role) = await this.GetUserAndRoleAsync(channel, message.Id, reaction);
             if (user == null || role == null)
                 return;
