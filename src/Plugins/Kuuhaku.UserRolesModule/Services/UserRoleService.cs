@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Data;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
@@ -11,53 +9,62 @@ using Discord.WebSocket;
 using Kuuhaku.Database.DbModels;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
-using Kuuhaku.Infrastructure.Models;
 using Kuuhaku.UserRolesModule.Classes;
 using Kuuhaku.UserRolesModule.Models;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using Microsoft.EntityFrameworkCore.Update;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Kuuhaku.UserRolesModule.Services
 {
     public class UserRoleService : IHostedService
     {
         private readonly DiscordSocketClient _client;
-        private readonly IServiceProvider _provider;
-        private readonly List<UserRoleLocation> _userRoles;
+        private readonly UserRolesRepository _repository;
+        private readonly ILogger<UserRoleService> _logger;
+        private readonly List<UserRoleDto> _userRoles;
 
-        private static UserRoleService _instance;
-
-        public UserRoleService(DiscordSocketClient client, IServiceProvider provider)
+        public UserRoleService(DiscordSocketClient client, UserRolesRepository repository, ILogger<UserRoleService> logger)
         {
             this._client = client;
-            this._provider = provider;
-            this._userRoles = new List<UserRoleLocation>();
+            this._repository = repository;
+            this._logger = logger;
+            this._userRoles = new List<UserRoleDto>();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            using var scope = this._provider.CreateScope();
-            using var unitOfWork = scope.ServiceProvider.GetRequiredService<UserRolesUoW>();
+            this._logger.Info("Starting User Role Service.");
 
-            var userRoles = await unitOfWork.UserRoles.GetAllAsync();
-            this._userRoles.AddRange(userRoles);
-            _instance = this;
+            var userRoleLocations = await this._repository.GetAllAsync();
+            this._userRoles.AddRange(userRoleLocations);
 
             this._client.ReactionAdded += this.ReactionAddedAsync;
             this._client.ReactionRemoved += this.ReactionRemovedAsync;
-            // this._client.ReactionsCleared += this.ReactionsClearedAsync;
+            this._client.ReactionsCleared += this.ReactionsClearedAsync;
 
             this._client.MessageUpdated += this.MessageUpdatedAsync;
 
-            // TODO: Rebuild all embeds on start up to ensure that the displayed role names are up to date
-            // TODO: Maybe hook up an event to watch for changes to roles and see if we have one, then update it's embed?
+            var userRoles = this._userRoles
+                .Where(r => r.MessageId.HasValue)
+                .GroupBy(r => r.MessageId.Value)
+                .Select(r => r.First());
+
+            foreach (var userRole in userRoles)
+            {
+                var guild = this._client.GetGuild(userRole.GuildId);
+                var channel = guild.GetTextChannel(userRole.ChannelId);
+                // ReSharper disable once PossibleInvalidOperationException
+                var message = await channel.GetMessageAsync(userRole.MessageId.Value) as IUserMessage;
+                await this.SyncReactionsAndRolesAsync(message);
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            this._client.ReactionAdded -= this.ReactionAddedAsync;
-            this._client.ReactionRemoved -= this.ReactionRemovedAsync;
-            // this._client.ReactionsCleared -= this.ReactionsClearedAsync;
+            this._logger.Info("Stopping User Role Service.");
             return Task.CompletedTask;
         }
 
@@ -72,101 +79,62 @@ namespace Kuuhaku.UserRolesModule.Services
                 throw new ArgumentException("Description cannot be empty or longer than 200 characters.",
                     nameof(description));
 
-            var self = _instance;
+            var userRole = await this._repository.CreateAsync(guild, channel, role, reaction, description);
+            this._userRoles.Add(userRole);
 
-            using var scope = this._provider.CreateScope();
-            using var unitOfWork = scope.ServiceProvider.GetRequiredService<UserRolesUoW>();
-
-            var userRole = new UserRole
-            {
-                EmojiName = reaction.Name,
-                RoleId = role.Id,
-                ShortDescription = description
-            };
-
-            // Emote == custom emoji.
-            if (reaction is Emote emote)
-                userRole.EmojiId = emote.Id;
-
-            var userRoleLoc =
-                self._userRoles.FirstOrDefault(url => url.GuildId == guild.Id && url.ChannelId == channel.Id);
-            var selfUserRoleLoc = userRoleLoc;
-            if (userRoleLoc == default)
-            {
-                var entity = await unitOfWork.UserRoles.AddAsync(new UserRoleLocation
-                {
-                    GuildId = guild.Id,
-                    ChannelId = channel.Id,
-                    Roles = new List<UserRole>(),
-                });
-                selfUserRoleLoc = userRoleLoc = entity.Entity;
-                self._userRoles.Add(userRoleLoc);
-            }
-            else
-            {
-                userRoleLoc = await unitOfWork.UserRoles.GetAsync(userRoleLoc.Id);
-            }
-
-            var messageIds = userRoleLoc.Roles
-                .Select(r => r.MessageId)
-                .Where(id => id.HasValue)
-                .Select(id => id.Value)
+            var messageIds = this._userRoles
+                .Where(u => u.GuildId == guild.Id && u.ChannelId == channel.Id)
+                .Where(u => u.MessageId.HasValue)
+                .Select(u => u.MessageId.Value)
                 .ToImmutableArray();
 
-            var activeChannel = await guild.GetTextChannelAsync(channel.Id);
-            IEmote emoji;
+            var activeChannel = channel is ITextChannel textChannel
+                ? textChannel
+                : await guild.GetTextChannelAsync(channel.Id);
             IUserMessage message = null;
-            if (userRole.EmojiId.HasValue)
-                emoji = Emote.Parse($"<:rs:{userRole.EmojiId}>");
-            else emoji = new Emoji(userRole.EmojiName);
 
             if (messageIds.Length > 0)
             {
-                // Find the first message id with space available in this channel
                 foreach (var messageId in messageIds)
                 {
                     message = await activeChannel.GetMessageAsync(messageId) as IUserMessage;
                     if (message == null)
-                        throw new Exception(
-                            $"The message ({messageId}) received from the channel ({channel.Id}) was not a user message...?");
-                    var embed = message.Embeds.First();
-                    if (embed.Fields.Length == 25)
-                        continue; // We're already full, try the next message
+                        throw new InvalidOperationException(
+                            $"The message ({messageId}( received from channel ({channel.Id}( was not a user message...?");
 
-                    var rolesToDisplay = userRoleLoc.Roles
+                    var embed = message.Embeds.First();
+                    if (embed.Fields.Length >= EmbedBuilder.MaxFieldCount)
+                        continue;
+
+                    var rolesToDisplay = this._userRoles
                         .Where(r => r.MessageId == messageId)
                         .ToImmutableArray();
 
-                    // If we have more than the maximum amount of fields, create a new message and embed.
-                    if (rolesToDisplay.Length >= EmbedBuilder.MaxFieldCount)
+                    if (rolesToDisplay.Length > EmbedBuilder.MaxFieldCount)
                     {
-                        var newEmbed = this.CreateEmbeds(new[] {userRole}, guild);
+                        var newEmbed = this.CreateEmbed(guild, userRole);
                         message = await activeChannel.SendMessageAsync(newEmbed);
-                        break; // The for loop as useless now.
+                        break;
                     }
 
-                    // Otherwise update the existing message's embed
-                    var updatedEmbed = this.CreateEmbeds(rolesToDisplay.Add(userRole), guild);
+                    var updatedEmbed = this.CreateEmbed(guild, rolesToDisplay.Add(userRole).ToArray());
                     await message.ModifyAsync(m => m.Embed = updatedEmbed.Build());
-                    break; // break early in case this isn't the last message id.
+                    break;
                 }
             }
 
             if (message == null)
             {
-                var newEmbed = this.CreateEmbeds(new[] {userRole}, guild);
-                message = await activeChannel.SendMessageAsync(newEmbed);
+                var embed = this.CreateEmbed(guild, userRole);
+                message = await activeChannel.SendMessageAsync(embed);
             }
 
-            await message.AddReactionAsync(emoji);
+            await message.AddReactionAsync(reaction);
             userRole.MessageId = message.Id;
 
-            userRoleLoc.Roles.Add(userRole);
-            selfUserRoleLoc.Roles.Add(userRole);
-
-            await unitOfWork.CompleterAsync();
-            // self._userRoles.Add(userRoleLoc);
+            await this._repository.UpdateAsync(userRole);
         }
+
 
         public async Task RemoveRoleAsync(IGuild guild, IMessageChannel channel, IRole role)
         {
@@ -174,104 +142,49 @@ namespace Kuuhaku.UserRolesModule.Services
             if (channel == null) throw new ArgumentNullException(nameof(channel));
             if (role == null) throw new ArgumentNullException(nameof(role));
 
-            var self = _instance;
-            var userRoleLocation = self._userRoles
-                .FirstOrDefault(url => url.GuildId == guild.Id && url.ChannelId == channel.Id);
+            var userRole = this._userRoles
+                .FirstOrDefault(r => r.GuildId == guild.Id &&
+                                     r.ChannelId == channel.Id &&
+                                     r.RoleId == role.Id);
 
-            var userRole = userRoleLocation?.Roles
-                .FirstOrDefault(u => u.RoleId == role.Id);
-
-            if (userRole == null)
+            if (userRole == default)
                 return;
 
-            using var scope = this._provider.CreateScope();
-            using var unitOfWork = scope.ServiceProvider.GetRequiredService<UserRolesUoW>();
+            this._userRoles.Remove(userRole);
+            await this._repository.DeleteAsync(guild, channel, role);
 
-            var urlDb = await unitOfWork.UserRoles.GetAsync(userRoleLocation.Id);
+            var activeChannel = channel is ITextChannel textChannel
+                ? textChannel
+                : await guild.GetTextChannelAsync(channel.Id);
+            var messageId = userRole.MessageId;
 
-            if (default == urlDb)
+            // This should never be triggered?
+            if (!messageId.HasValue)
                 return;
 
-            var roleToRemove = urlDb.Roles.FirstOrDefault(r => r.RoleId == role.Id);
-            urlDb.Roles.Remove(roleToRemove);
-            // naughty?
-            unitOfWork.UserRoles.Context.UserRoles.Remove(roleToRemove);
+            var message = await activeChannel.GetMessageAsync(messageId.Value) as IUserMessage;
+            if (message == null)
+                throw new Exception(
+                    $"The message ({messageId}) received from the channel ({channel.Id}) was not a user message...?");
 
-            var hasException = false;
-            try
+            var rolesToDisplay = this._userRoles
+                .Where(r => r.MessageId == messageId);
+
+            var updatedEmbed = this.CreateEmbed(guild, rolesToDisplay.ToArray());
+            await message.ModifyAsync(m => m.Embed = updatedEmbed.Build());
+
+            foreach (var (reaction, _) in message.Reactions)
             {
-                var activeChannel = await guild.GetTextChannelAsync(channel.Id);
-                IEmote emoji;
-                if (userRole.EmojiId.HasValue)
-                    emoji = Emote.Parse($"<:rs:{userRole.EmojiId}>");
-                else emoji = new Emoji(userRole.EmojiName);
-                var messageId = userRole.MessageId;
+                var isOldReaction = reaction.Name == userRole.EmojiName;
+                if (reaction is Emote emote)
+                    isOldReaction = emote.Id == userRole.EmojiId;
 
-                if (!messageId.HasValue)
-                    return;
+                if (!isOldReaction)
+                    continue;
 
-                var message = await activeChannel.GetMessageAsync(messageId.Value) as IUserMessage;
-                if (message == null)
-                    throw new Exception(
-                        $"The message ({messageId}) received from the channel ({channel.Id}) was not a user message...?");
-
-                var rolesToDisplay = urlDb.Roles
-                    .Where(r => r.MessageId == messageId)
-                    .ToImmutableArray();
-
-                // Otherwise update the existing message's embed
-                var updatedEmbed = this.CreateEmbeds(rolesToDisplay, guild);
-                await message.ModifyAsync(m => m.Embed = updatedEmbed.Build());
-
-                foreach (var (reaction, metadata) in message.Reactions)
-                {
-                    var isOldReaction = false;
-                    if (reaction is Emote emote && emoji is Emote emojiEmote)
-                        isOldReaction = emote.Id == emojiEmote.Id;
-                    if (reaction.Name == emoji.Name)
-                        isOldReaction = true;
-
-                    if (!isOldReaction)
-                        continue;
-
-                    await message.RemoveReactionAsync(reaction, this._client.CurrentUser);
-                    break;
-                }
+                await message.RemoveReactionAsync(reaction, this._client.CurrentUser);
+                break;
             }
-            catch (Exception)
-            {
-                hasException = true;
-                throw;
-            }
-            finally
-            {
-                if (!hasException)
-                {
-                    userRoleLocation.Roles.Remove(userRole);
-                    await unitOfWork.CompleterAsync();
-                }
-            }
-        }
-
-        private KuuhakuEmbedBuilder CreateEmbeds(IReadOnlyList<UserRole> userRoles, IGuild guild)
-        {
-            IUser currentUser;
-            if (guild is SocketGuild socketGuild)
-                currentUser = socketGuild.CurrentUser;
-            else currentUser = this._client.CurrentUser;
-
-            var builder = new KuuhakuEmbedBuilder()
-                .WithColor()
-                .WithFooter(currentUser);
-
-            for (var i = 0; i < userRoles.Count; i++)
-            {
-                var userRole = userRoles[i];
-                var role = guild.GetRole(userRole.RoleId);
-                builder.AddField(role.Name, userRole.ShortDescription, true);
-            }
-
-            return builder;
         }
 
         private async Task OnReactionAddedAsync(Cacheable<IUserMessage, UInt64> message, ISocketMessageChannel channel,
@@ -293,85 +206,130 @@ namespace Kuuhaku.UserRolesModule.Services
                 await user.RemoveRoleAsync(role);
         }
 
-        // private async Task OnReactionsClearedAsync(Cacheable<IUserMessage, UInt64> message, ISocketMessageChannel channel)
-        // {
-        //     // TODO: Re-apply all reactions so that users know what to react.
-        // }
+        private async Task OnReactionsClearedAsync(Cacheable<IUserMessage, UInt64> cachedMessage, ISocketMessageChannel channel)
+        {
+            var message = cachedMessage.HasValue
+                ? cachedMessage.Value
+                : await channel.GetMessageAsync(cachedMessage.Id) as IUserMessage;
+
+            var emojis = this._userRoles.Where(r => r.MessageId == message.Id)
+                .Select(r => r.EmojiId.HasValue ? (IEmote) Emote.Parse($"<:rs:{r.EmojiId}>") : new Emoji(r.EmojiName));
+
+            await message.AddReactionsAsync(emojis.ToArray());
+        }
+
+        private async Task OnMessageUpdatedAsync(Cacheable<IMessage, UInt64> oldMessage, SocketMessage newMessage,
+            ISocketMessageChannel channel)
+        {
+            var messageIds = this._userRoles.Where(r => r.MessageId == newMessage.Id)
+                .Select(r => r.MessageId.Value);
+
+            if (messageIds.Any() && newMessage is IUserMessage userMessage && userMessage.IsSuppressed)
+                await userMessage.ModifySuppressionAsync(false);
+        }
 
         private async Task<(IGuildUser, IRole)> GetUserAndRoleAsync(IMessageChannel channel, UInt64 messageId,
             SocketReaction reaction)
         {
             if (!(channel is IGuildChannel guildChannel))
-                return (null, null); // We don't care about reactions in channels that aren't from a guild.
+                return (null, null);
 
             var roles = this._userRoles
-                .Where(url => url.GuildId == guildChannel.GuildId && url.ChannelId == guildChannel.Id)
-                .SelectMany(url => url.Roles)
                 .Where(r => r.MessageId == messageId)
                 .ToImmutableArray();
 
-            // There was no roles for this message
             if (roles.Length == 0)
                 return (null, null);
 
-            UserRole role;
+            var emote = reaction.Emote as Emote;
+            var userRole = roles.FirstOrDefault(r =>
+                r.EmojiId.HasValue && r.EmojiId.Value == emote?.Id || r.EmojiName == reaction.Emote.Name);
 
-            var emoji = reaction.Emote;
-            if (emoji is Emote emote)
-                role = roles.FirstOrDefault(r => r.EmojiId == emote.Id);
-            else role = roles.FirstOrDefault(r => r.EmojiName == emoji.Name);
-
-            if (role == default)
+            if (userRole == default)
                 return (null, null);
 
-            var roleId = role.RoleId;
-            var roleObj = guildChannel.Guild.GetRole(roleId);
+            var roleId = userRole.RoleId;
+            var role = guildChannel.Guild.GetRole(roleId);
 
-            var user = await guildChannel.Guild.GetUserAsync(reaction.UserId);
-            return (user, roleObj);
+            var user = reaction.User.Value as IGuildUser ??
+                       await guildChannel.Guild.GetUserAsync(reaction.UserId);
+
+            return (user, role);
+        }
+
+        private async Task SyncReactionsAndRolesAsync(IUserMessage message)
+        {
+            var roles = this._userRoles.Where(r => r.MessageId == message.Id);
+            var expectedReactions = roles.Select(r => (r.EmojiId.HasValue,
+                r.EmojiId.HasValue ? Emote.Parse($"<:rs:{r.EmojiId}>") : null,
+                r.EmojiId.HasValue ? null : new Emoji(r.EmojiName)));
+
+            var reactions = message.Reactions.Keys
+                .ToImmutableArray();
+
+            var emoteIds = reactions.Select(r => (r as Emote)?.Id ?? 0)
+                .ToImmutableArray();
+            var emojiNames = reactions.Select(r => (r as Emoji)?.Name)
+                .ToImmutableArray();
+
+            foreach (var (isEmote, emote, emoji) in expectedReactions)
+            {
+                if (isEmote && !emoteIds.Contains(emote.Id) ||
+                    !isEmote && !emojiNames.Contains(emoji.Name))
+                {
+                    await message.AddReactionAsync(isEmote ? (IEmote) emote : emoji);
+                }
+            }
+        }
+
+        private KuuhakuEmbedBuilder CreateEmbed(IGuild guild, params UserRoleDto[] userRoles)
+        {
+            IUser currentUser;
+            if (guild is SocketGuild socketGuild)
+                currentUser = socketGuild.CurrentUser;
+            else currentUser = this._client.CurrentUser;
+
+            var builder = new KuuhakuEmbedBuilder()
+                .WithColor()
+                .WithFooter(currentUser);
+
+            for (var i = 0; i < userRoles.Length; i++)
+            {
+                var userRole = userRoles[i];
+                var role = guild.GetRole(userRole.RoleId);
+                builder.AddField(role.Name, userRole.ShortDescription, true);
+            }
+
+            return builder;
         }
 
         private Task ReactionAddedAsync(Cacheable<IUserMessage, UInt64> message, ISocketMessageChannel channel,
             SocketReaction reaction)
         {
-            Task.Factory.StartNew(async () =>
-                await this.OnReactionAddedAsync(message, channel, reaction).ConfigureAwait(false));
+            Task.Factory.StartNew(() =>
+                this.OnReactionAddedAsync(message, channel, reaction).ConfigureAwait(false));
             return Task.CompletedTask;
         }
 
         private Task ReactionRemovedAsync(Cacheable<IUserMessage, UInt64> message, ISocketMessageChannel channel,
             SocketReaction reaction)
         {
-            Task.Factory.StartNew(async () =>
-                await this.OnReactionRemovedAsync(message, channel, reaction).ConfigureAwait(false));
+            Task.Factory.StartNew(() =>
+                this.OnReactionRemovedAsync(message, channel, reaction).ConfigureAwait(false));
             return Task.CompletedTask;
         }
 
-        // private Task ReactionsClearedAsync(Cacheable<IUserMessage, UInt64> message, ISocketMessageChannel channel)
-        // {
-        //     Task.Factory.StartNew(async () => await this.OnReactionsClearedAsync(message, channel).ConfigureAwait(false));
-        //     return Task.CompletedTask;
-        // }
-
-        private async Task OnMessageUpdatedAsync(Cacheable<IMessage, UInt64> oldMessage, SocketMessage newMessage,
-            ISocketMessageChannel channel)
+        private Task ReactionsClearedAsync(Cacheable<IUserMessage, UInt64> message, ISocketMessageChannel channel)
         {
-            var messageIds = this._userRoles
-                .Where(url => url.ChannelId == newMessage.Channel.Id)
-                .SelectMany(url => url.Roles
-                    .Where(r => r.MessageId.HasValue)
-                    .Select(r => r.MessageId.Value))
-                .Distinct();
-
-            if (messageIds.Contains(newMessage.Id) && newMessage is IUserMessage userMessage && newMessage.IsSuppressed)
-                await userMessage.ModifySuppressionAsync(false);
+            Task.Factory.StartNew(() => this.OnReactionsClearedAsync(message, channel).ConfigureAwait(false));
+            return Task.CompletedTask;
         }
 
         private Task MessageUpdatedAsync(Cacheable<IMessage, UInt64> oldMessage, SocketMessage newMessage,
             ISocketMessageChannel channel)
         {
-            Task.Factory.StartNew(async () =>
-                await this.OnMessageUpdatedAsync(oldMessage, newMessage, channel).ConfigureAwait(false));
+            Task.Factory.StartNew(() =>
+                this.OnMessageUpdatedAsync(oldMessage, newMessage, channel).ConfigureAwait(false));
             return Task.CompletedTask;
         }
     }
