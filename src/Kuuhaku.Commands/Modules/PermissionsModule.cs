@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Kuuhaku.Commands.Attributes;
 using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Models;
 using Kuuhaku.Infrastructure.Classes;
@@ -18,7 +19,7 @@ namespace Kuuhaku.Commands.Modules
             this._repository = repository;
         }
 
-        [Command("moderator")]
+        [Command("moderator"), RequiredMinPermission(CommandPermissions.Admin)]
         public async Task ToggleModeratorAsync(IRole role)
         {
             var isMod = await this._repository.ExistsAsync(this.Guild, CommandPermissions.Moderator.ToString(), role);
@@ -38,7 +39,7 @@ namespace Kuuhaku.Commands.Modules
             }
         }
 
-        [Command("admin")]
+        [Command("admin"), RequiredMinPermission(CommandPermissions.ServerOwner)]
         public async Task ToggleAdminAsync(IRole role)
         {
             var isMod = await this._repository.ExistsAsync(this.Guild, CommandPermissions.Admin.ToString(), role);

@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Kuuhaku.Commands.Attributes;
 using Kuuhaku.Commands.Models;
 using Kuuhaku.Infrastructure.Classes;
 using Kuuhaku.Infrastructure.Extensions;
@@ -18,11 +19,11 @@ namespace Kuuhaku.UserRolesModule
             this._userRoleService = userRoleService;
         }
 
-        [Command("user roles add")]
+        [Command("user roles add"), RequiredMinPermission(CommandPermissions.Moderator)]
         public Task AddRoleAsync(IRole role, IEmote emote, [Remainder] String shortDescription)
             => this.AddRoleAsync(this.Channel, role, emote, shortDescription);
 
-        [Command("user roles add")]
+        [Command("user roles add"), RequiredMinPermission(CommandPermissions.Moderator)]
         public async Task AddRoleAsync(IChannel channel, IRole role, IEmote emote, [Remainder] String shortDescription)
         {
             if (this.IsPrivate)
@@ -51,11 +52,11 @@ namespace Kuuhaku.UserRolesModule
             await this.Message.AddReactionAsync(new Emoji(NeoSmart.Unicode.Emoji.ThumbsUp.ToString()));
         }
 
-        [Command("user roles remove")]
+        [Command("user roles remove"), RequiredMinPermission(CommandPermissions.Moderator)]
         public Task RemoveRoleAsync(IRole role)
             => this.RemoveRoleAsync(this.Channel, role);
 
-        [Command("user roles remove")]
+        [Command("user roles remove"), RequiredMinPermission(CommandPermissions.Moderator)]
         public async Task RemoveRoleAsync(IMessageChannel channel, IRole role)
         {
             if (this.IsPrivate)
