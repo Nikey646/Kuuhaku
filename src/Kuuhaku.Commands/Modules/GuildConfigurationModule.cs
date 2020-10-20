@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Humanizer;
+using Kuuhaku.Commands.Attributes;
 using Kuuhaku.Commands.Classes.Repositories;
 using Kuuhaku.Commands.Models;
 using Kuuhaku.Infrastructure.Classes;
@@ -50,7 +51,7 @@ namespace Kuuhaku.Commands.Modules
             await this.ReplyAsync(embed);
         }
 
-        [Command("prefix")]
+        [Command("prefix"), RequiredMinPermission(CommandPermissions.Moderator)]
         public async Task SetPrefixAsync(String newPrefix)
         {
             var config = await this._repository.GetAsync(this.Guild);
@@ -66,7 +67,7 @@ namespace Kuuhaku.Commands.Modules
             await this.ReplyAsync(embed);
         }
 
-        [Command("blacklist user")]
+        [Command("blacklist user"), RequiredMinPermission(CommandPermissions.Moderator)]
         public async Task BlacklistUser(IUser user)
         {
             var isBlacklisted = await this._repository.IsUserBlacklisted(this.Guild, user);
@@ -122,7 +123,7 @@ namespace Kuuhaku.Commands.Modules
             await this.ReplyAsync(embed.WithDescription(prefixMessage + blacklistedMentions.Humanize()));
         }
 
-        [Command("blacklist module")]
+        [Command("blacklist module"), RequiredMinPermission(CommandPermissions.Moderator)]
         public async Task BlacklistModule(String moduleName)
         {
             var input = moduleName;
