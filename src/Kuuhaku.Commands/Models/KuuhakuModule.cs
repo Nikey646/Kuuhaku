@@ -24,6 +24,10 @@ namespace Kuuhaku.Commands.Models
 
         protected Boolean IsPrivate => this.Context.IsPrivate;
 
+        protected KuuhakuEmbedBuilder Embed => new KuuhakuEmbedBuilder()
+            .WithColor()
+            .WithFooter(this.Context);
+
         public Task<IUserMessage> ReplyAsync(String message, KuuhakuEmbedBuilder embed, CancellationToken ct = default)
             => this.Channel.SendMessageAsync(message, embed, ct);
 
