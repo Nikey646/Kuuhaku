@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using BooruViewer.Interop.Extensions;
+using Kuuhaku.BooruModule.Classes;
 
 namespace Kuuhaku.BooruModule
 {
@@ -11,6 +12,9 @@ namespace Kuuhaku.BooruModule
         {
             services.AddDistributedMemoryCache();
             services.WithAllBoorus();
+
+            services.AddSingleton<SubscriptionService>();
+            services.AddSingleton<IHostedService>(s => s.GetRequiredService<SubscriptionService>());
         }
     }
 }
