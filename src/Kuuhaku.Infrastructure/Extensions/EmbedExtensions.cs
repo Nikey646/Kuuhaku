@@ -29,6 +29,9 @@ namespace Kuuhaku.Infrastructure.Extensions
             Boolean isInline = true)
             => embed.AddField(title, value, isInline);
 
+        public static KuuhakuEmbedBuilder WithField(this KuuhakuEmbedBuilder embed, String title, in Object value)
+            => embed.WithField(title, value.ToString());
+
         public static KuuhakuEmbedBuilder WithFieldIf(this KuuhakuEmbedBuilder embed, String title, String value,
             Boolean isInline = true, Boolean includeIf = true)
             => includeIf ? embed.WithField(title, value, isInline) : embed;
@@ -43,6 +46,5 @@ namespace Kuuhaku.Infrastructure.Extensions
 
         public static KuuhakuEmbedBuilder WithFooter(this KuuhakuEmbedBuilder embed, IUser user)
             => embed.WithFooter(user.GetName(), user.GetAvatar(32));
-
     }
 }
