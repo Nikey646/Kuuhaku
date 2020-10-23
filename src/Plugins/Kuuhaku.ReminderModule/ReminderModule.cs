@@ -24,9 +24,7 @@ namespace Kuuhaku.ReminderModule
             this._interactionService = interactionService ?? throw new ArgumentNullException(nameof(interactionService));
             this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
-        // TODO: Make this a two part command, the first part takes what you want to be reminded about
-        // The second part will take when you want to be reminded.
+1
         [Command("remind"), Alias("remindme", "reminder")]
         public async Task CreateReminder([Remainder] String what)
         {
