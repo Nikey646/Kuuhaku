@@ -23,6 +23,7 @@ namespace Kuuhaku.FunModules
         [Command("dog"), Alias("actually a cat")]
         public async Task RandomDogAsync()
         {
+            using var typing = this.Channel.EnterTypingState();
             var response = await this._client.GetAsync(DogApi);
             var file = await response.Content.ReadAsStringAsync();
 
@@ -32,6 +33,7 @@ namespace Kuuhaku.FunModules
         [Command("cat"), Alias("actually a dog")]
         public async Task RandomCatAsync()
         {
+            using var typing = this.Channel.EnterTypingState();
             var response = await this._client.GetAsync(CatApi);
             var json = await response.Content.ReadAsStringAsync();
             var res = JsonConvert.DeserializeAnonymousType(json, new {file = ""});
