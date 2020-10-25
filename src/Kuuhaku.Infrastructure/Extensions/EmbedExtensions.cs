@@ -29,6 +29,10 @@ namespace Kuuhaku.Infrastructure.Extensions
             Boolean isInline = true)
             => embed.AddField(title, value, isInline);
 
+        public static KuuhakuEmbedBuilder WithField(this KuuhakuEmbedBuilder embed, String title, Object value,
+            Boolean isInline = true)
+            => embed.AddField(title, value, isInline);
+
         public static KuuhakuEmbedBuilder WithField(this KuuhakuEmbedBuilder embed, String title, in Object value)
             => embed.WithField(title, value.ToString());
 
@@ -38,6 +42,15 @@ namespace Kuuhaku.Infrastructure.Extensions
 
         // Late evaluation, EG: Potential DB lookup
         public static KuuhakuEmbedBuilder WithFieldIf(this KuuhakuEmbedBuilder embed, String title, Func<String> value,
+            Boolean isInline = true, Boolean includeIf = true)
+            => includeIf ? embed.WithField(title, value(), isInline) : embed;
+
+        public static KuuhakuEmbedBuilder WithFieldIf(this KuuhakuEmbedBuilder embed, String title, Object value,
+            Boolean isInline = true, Boolean includeIf = true)
+            => includeIf ? embed.WithField(title, value, isInline) : embed;
+
+        // Late evaluation, EG: Potential DB lookup
+        public static KuuhakuEmbedBuilder WithFieldIf(this KuuhakuEmbedBuilder embed, String title, Func<Object> value,
             Boolean isInline = true, Boolean includeIf = true)
             => includeIf ? embed.WithField(title, value(), isInline) : embed;
 

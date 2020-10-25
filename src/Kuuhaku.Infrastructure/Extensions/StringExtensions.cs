@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using Humanizer;
 
 namespace Kuuhaku.Infrastructure.Extensions
 {
@@ -16,5 +17,13 @@ namespace Kuuhaku.Infrastructure.Extensions
 
         public static String UrlDecode(this String str)
             => WebUtility.UrlDecode(str);
+
+        public static String ReadMore(this String str, String link, Int32 length = 1024, Boolean forceReadMore = true)
+        {
+            link = $" [_Read More_]({link})";
+            if (str.Length + link.Length > length || forceReadMore)
+                return str.Truncate(length - link.Length) + link;
+            return str;
+        }
     }
 }
