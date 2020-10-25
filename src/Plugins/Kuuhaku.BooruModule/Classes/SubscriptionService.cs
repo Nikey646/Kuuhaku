@@ -136,24 +136,8 @@ namespace Kuuhaku.BooruModule.Classes
                 .WithFooter(botUser);
 
             var preview = $"{post.Files.Preview}";
-            var original = $"{post.Files.Original}";
-
-            var fileSizeValue = "";
-
-            try
-            {
-                var fileSizeAsInt = (Int32) post.Files.FileSize;
-                fileSizeValue = fileSizeAsInt.Bytes().ToString("0.##");
-            }
-            catch
-            {
-                fileSizeValue = "Too big to count!";
-            }
 
             return embed
-                .WithField("Hash", post.Hash)
-                .WithField("Size", fileSizeValue)
-                .WithFieldIf("Download", () => $"[Full Image]({original})", includeIf: original != preview)
                 .WithFieldIf("Source", () => post.Source.Href.IsEmpty()
                         ? post.Source.FriendlyName
                         : $"[{post.Source.FriendlyName}]({post.Source.Href})",
