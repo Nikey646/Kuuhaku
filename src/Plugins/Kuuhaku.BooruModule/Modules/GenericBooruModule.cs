@@ -152,9 +152,7 @@ namespace Kuuhaku.BooruModule.Modules
             var length = 0;
             var transformedTags = new List<String>();
 
-            foreach (var tag in tags
-                .OrderBy(t => (Int32) t.Type)
-                .ThenBy(t => t.Name))
+            foreach (var tag in tags)
             {
                 var mdLink = Linkify(CustomTitleCaseTransformer.Instance.Transform(tag.Name),
                     $"{sauce.BaseUri}{PostUrl(sauce.Identifier)}?tags={EscapeLink(tag.Name.UrlEncode())}");
