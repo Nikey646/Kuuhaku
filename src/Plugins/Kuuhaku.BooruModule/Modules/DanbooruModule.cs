@@ -5,19 +5,27 @@ using BooruViewer.Interop.Interfaces;
 using Discord;
 using Discord.Commands;
 using Kuuhaku.BooruModule.Classes;
+using Kuuhaku.BooruModule.Models;
+using Kuuhaku.Infrastructure.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Kuuhaku.BooruModule.Modules
 {
-    public class DanbooruModule : GenericBooruModule
+    public sealed class DanbooruModule : GenericBooruModule
     {
         private readonly SubscriptionService _service;
         public override IBooru Booru { get; }
 
         // ReSharper disable once SuggestBaseTypeForParameter
-        public DanbooruModule(Danbooru booru, BooruRepository repository, SubscriptionService service) : base(repository)
+        public DanbooruModule(Danbooru booru, BooruRepository repository, SubscriptionService service, IOptionsSnapshot<BooruOptions> options) : base(repository)
         {
             this._service = service;
             this.Booru = booru;
+
+            var opts = options.Get("danbooru");
+
+            if (!opts.Username.IsEmpty())
+                this.Booru.WithAuthentication(opts.Username, opts.ApiKey);
         }
 
         [Command("Danbooru")]
