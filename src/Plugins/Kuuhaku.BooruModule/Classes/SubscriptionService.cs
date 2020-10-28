@@ -46,6 +46,20 @@ namespace Kuuhaku.BooruModule.Classes
             await this._repository.SubscribeAsync(booru.Booru, guild, channel);
         }
 
+        public async Task RemoveChannelAsync(IBooru booru, SocketGuild guild, IChannel channel)
+        {
+            var mappedBooru = this._map.First(kv => kv.Key.Booru.Identifier == booru.Booru.Identifier)
+                .Key;
+
+            this._map[mappedBooru].Remove((guild.Id, channel.Id));
+            await this._repository.UnsubscribeAsync(booru.Booru, guild, channel);
+        }
+
+        public Task<Boolean> IsChannelSubscribed(IBooru booru, SocketGuild guild, IChannel channel)
+        {
+            return this._repository.IsSubscribedAsync(booru.Booru, guild, channel);
+        }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             this._logger.Info("Starting the Booru Subscription Service.");

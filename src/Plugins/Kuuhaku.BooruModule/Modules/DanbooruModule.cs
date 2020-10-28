@@ -6,6 +6,8 @@ using Discord;
 using Discord.Commands;
 using Kuuhaku.BooruModule.Classes;
 using Kuuhaku.BooruModule.Models;
+using Kuuhaku.Commands.Attributes;
+using Kuuhaku.Commands.Models;
 using Kuuhaku.Infrastructure.Extensions;
 using Microsoft.Extensions.Options;
 
@@ -34,15 +36,26 @@ namespace Kuuhaku.BooruModule.Modules
             return base.GetPostsAsync(tags);
         }
 
-        [Command("danbooru subscribe")]
-        public async Task Subscribe(IChannel where = null)
+        [Command("danbooru subscribe"), RequiredMinPermission(CommandPermissions.Admin)]
+        public async Task SubscribeAsync(IChannel where = null)
         {
             where ??= this.Channel;
 
-            await this._service.AddChannelAsync(this.Booru, this.Guild, where);
-            await this.ReplyAsync(
-                this.Embed.WithDescription(
-                    $"You will now see new posts from Danbooru in {MentionUtils.MentionChannel(where.Id)}"));
+            var subbed = await this._service.IsChannelSubscribed(this.Booru, this.Guild, where);
+            if (subbed)
+            {
+                await this._service.RemoveChannelAsync(this.Booru, this.Guild, where);
+                await this.ReplyAsync(
+                    this.Embed.WithDescription(
+                        $"You will no longer see new posts from Danbooru in {MentionUtils.MentionChannel(where.Id)}"));
+            }
+            else
+            {
+                await this._service.AddChannelAsync(this.Booru, this.Guild, where);
+                await this.ReplyAsync(
+                    this.Embed.WithDescription(
+                        $"You will now see new posts from Danbooru in {MentionUtils.MentionChannel(where.Id)}"));
+            }
         }
     }
 }

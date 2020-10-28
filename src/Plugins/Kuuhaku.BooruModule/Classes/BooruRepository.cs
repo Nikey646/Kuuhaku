@@ -103,6 +103,13 @@ namespace Kuuhaku.BooruModule.Classes
             return this._db.Database.SetAddAsync(subscriptionKey, $"{guild.Id},{channel.Id}");
         }
 
+        public Task<Boolean> IsSubscribedAsync(SourceBooru booru, SocketGuild guild, IChannel channel)
+        {
+            var subscriptionKey = $"booruSubscriptions:{booru.Identifier}";
+
+            return this._db.Database.SetContainsAsync(subscriptionKey, $"{guild.Id},{channel.Id}");
+        }
+
         public Task UnsubscribeAsync(SourceBooru booru, IGuild guild, IChannel channel)
         {
             var subscriptionKey = $"booruSubscriptions:{booru.Identifier}";
@@ -125,6 +132,5 @@ namespace Kuuhaku.BooruModule.Classes
 
             return this._db.Database.StringSetAsync(lastIdKey, id);
         }
-
     }
 }
