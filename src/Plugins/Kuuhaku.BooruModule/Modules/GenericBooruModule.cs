@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 using BooruViewer.Interop.Dtos.Booru;
 using BooruViewer.Interop.Dtos.Booru.Posts;
 using BooruViewer.Interop.Interfaces;
@@ -128,8 +127,8 @@ namespace Kuuhaku.BooruModule.Modules
             {
                 return booruId switch
                 {
-                    "yandere" => "post",
-                    "konachan" => "post",
+                    "yandere" => "post/show",
+                    "konachan" => "post/show",
                     _ => "posts",
                 };
             }
