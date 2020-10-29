@@ -34,11 +34,11 @@ namespace Kuuhaku.Anilist
             this._interactiveSearchService = interactiveSearchService;
         }
 
-        [Command("anime")]
+        [Command("anime"), Alias("a")]
         public Task AnimeAsync(String searchQuery)
             => this.SearchAsync(searchQuery, "ANIME");
 
-        [Command("manga")]
+        [Command("manga"), Alias("m")]
         public Task MangaAsync(String searchQuery)
             => this.SearchAsync(searchQuery, "MANGA");
 
