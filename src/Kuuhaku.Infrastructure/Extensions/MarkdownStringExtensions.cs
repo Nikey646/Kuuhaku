@@ -6,5 +6,8 @@ namespace Kuuhaku.Infrastructure.Extensions
     {
         public static String MdBold(this String str)
             => $"**{str}**";
+
+        public static String MdSpoiler(this String str)
+            => $"||{str}||";
     }
 }

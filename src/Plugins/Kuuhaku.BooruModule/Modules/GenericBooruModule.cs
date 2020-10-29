@@ -19,15 +19,14 @@ namespace Kuuhaku.BooruModule.Modules
     public abstract class GenericBooruModule : KuuhakuModule
     {
         private readonly BooruRepository _repository;
-        private readonly String[] _blacklistedTags;
+
+        public static readonly String[] BlacklistedTags;
 
         public abstract IBooru Booru { get; }
 
-        public GenericBooruModule(BooruRepository repository)
+        static GenericBooruModule()
         {
-            this._repository = repository;
-
-            this._blacklistedTags = new[]
+            BlacklistedTags = new[]
             {
                 "loli", "lolicon",
                 "shota", "shotacon",
@@ -36,6 +35,11 @@ namespace Kuuhaku.BooruModule.Modules
                 "toddlercon",
                 "rape",
             };
+        }
+
+        public GenericBooruModule(BooruRepository repository)
+        {
+            this._repository = repository;
         }
 
         [Command]
@@ -62,7 +66,7 @@ namespace Kuuhaku.BooruModule.Modules
                     // These types of posts are not viable for viewing in Discord.
                     .Where(p => !(p.Files == null || p.Files.IsVideo || p.Files.IsFlash || p.Files.IsUgoira))
                     .Where(p => isNsfw || p.Rating == Rating.Safe)
-                    .Where(p => p.Tags.All(t => !this._blacklistedTags.Contains(t.Name)))
+                    .Where(p => p.Tags.All(t => !BlacklistedTags.Contains(t.Name)))
                     // It's safe to cast UInt64 p.Id to Int64 due to the fact the id will never exceed the max size of Int64.
                     .Where(p => !viewHistory.Contains((Int64) p.Id))
                     .ToImmutableArray();
@@ -123,8 +127,8 @@ namespace Kuuhaku.BooruModule.Modules
             {
                 return booruId switch
                 {
-                    "yandere" => "post",
-                    "konachan" => "post",
+                    "yandere" => "post/show",
+                    "konachan" => "post/show",
                     _ => "posts",
                 };
             }
@@ -147,9 +151,7 @@ namespace Kuuhaku.BooruModule.Modules
             var length = 0;
             var transformedTags = new List<String>();
 
-            foreach (var tag in tags
-                .OrderBy(t => (Int32) t.Type)
-                .ThenBy(t => t.Name))
+            foreach (var tag in tags)
             {
                 var mdLink = Linkify(CustomTitleCaseTransformer.Instance.Transform(tag.Name),
                     $"{sauce.BaseUri}{PostUrl(sauce.Identifier)}?tags={EscapeLink(tag.Name.UrlEncode())}");

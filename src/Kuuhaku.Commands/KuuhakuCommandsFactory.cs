@@ -38,9 +38,13 @@ namespace Kuuhaku.Commands
             services.AddSingleton<RepeatRepository>();
             services.AddSingleton<GuildConfigRepository>();
             services.AddSingleton<PermissionsRepository>();
+            services.AddSingleton<StatsRepository>();
 
             services.AddSingleton<PrefixCommandHandler>();
-            services.AddSingleton<IHostedService, PrefixCommandHandler>();
+            services.AddSingleton<IHostedService>(s => s.GetRequiredService<PrefixCommandHandler>());
+
+            services.AddSingleton<StatsService>();
+            services.AddSingleton<IHostedService>(s => s.GetRequiredService<StatsService>());
         }
 
         (String configKey, Object defaultValue) IPluginFactory.ConfigureDefaultConfiguration() =>
