@@ -145,7 +145,7 @@ namespace Kuuhaku.BooruModule.Classes
         {
             var embed = new KuuhakuEmbedBuilder()
                 .WithColor()
-                .WithAuthor($"Id - {post.Id}", $"{sauce.BaseUri}favicon.ico", $"{sauce.BaseUri}posts/{post.Id}")
+                .WithAuthor($"Id - {post.Id}", $"{sauce.BaseUri}favicon.ico", $"{sauce.BaseUri}{this.PostUrl(sauce.Identifier)}{post.Id}")
                 .WithTimestamp(post.UploadedAt)
                 .WithFooter(botUser);
 
@@ -161,18 +161,28 @@ namespace Kuuhaku.BooruModule.Classes
                 .WithImageUrl(preview);
         }
 
+        private String PostUrl(String booruId)
+        {
+            return booruId switch
+            {
+                "yandere" => "post/show/",
+                "konachan" => "post/show/",
+                _ => "posts/",
+            };
+        }
+
+        private String SearchUrl(String booruId)
+        {
+            return booruId switch
+            {
+                "yandere" => "post",
+                "konachan" => "post",
+                _ => "posts",
+            };
+        }
+
         private EmbedFieldBuilder CreateTagsField(ICollection<Tag> tags, SourceBooru sauce)
         {
-            String PostUrl(String booruId)
-            {
-                return booruId switch
-                {
-                    "yandere" => "post",
-                    "konachan" => "post",
-                    _ => "posts",
-                };
-            }
-
             String EscapeLink(String input)
                 => input.Replace("[", "\\[")
                     .Replace("]", "\\]")
@@ -195,7 +205,7 @@ namespace Kuuhaku.BooruModule.Classes
             foreach (var tag in tags)
             {
                 var mdLink = Linkify(CustomTitleCaseTransformer.Instance.Transform(tag.Name),
-                    $"{sauce.BaseUri}{PostUrl(sauce.Identifier)}?tags={EscapeLink(tag.Name.UrlEncode())}");
+                    $"{sauce.BaseUri}{this.SearchUrl(sauce.Identifier)}?tags={EscapeLink(tag.Name.UrlEncode())}");
 
                 length += mdLink.Length + 2; // +2 for ", " after each.
                 if (length >= 1000) // Leave 24 characters spare if this condition is true.
