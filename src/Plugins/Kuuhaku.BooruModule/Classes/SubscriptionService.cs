@@ -89,10 +89,12 @@ namespace Kuuhaku.BooruModule.Classes
                 }
 
                 if (tasks.Count > 0)
+                {
                     await Task.WhenAll(tasks);
+                    this._logger.Debug("All Boorus have processed new posts and posted them");
+                }
 
-                this._logger.Debug("All Boorus have processed new posts and posted them");
-                await Task.Delay(TimeSpan.FromMinutes(1));
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
 
             this._logger.Info($"Stopping the Booru Subscription Service.");

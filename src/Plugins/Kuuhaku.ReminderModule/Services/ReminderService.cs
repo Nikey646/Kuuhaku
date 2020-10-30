@@ -49,7 +49,7 @@ namespace Kuuhaku.ReminderModule.Services
             {
                 await this.CheckReminders(stoppingToken);
 
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
 
             this._logger.Info("Reminder service Stopping");
