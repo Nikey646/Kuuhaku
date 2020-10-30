@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BooruViewer.Interop.Dtos.Booru;
 using Discord;
 using Discord.WebSocket;
+using Kuuhaku.BooruModule.Models;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace Kuuhaku.BooruModule.Classes
@@ -70,6 +71,43 @@ namespace Kuuhaku.BooruModule.Classes
             }
 
             await this._db.Database.SetAddAsync(historyKey, newId);
+        }
+
+        // I HATE THESE NAMESKGJSFDNGHFJSDNNH
+        public Task BlacklistAddAsync(String tag, String reason)
+        {
+            const String key = "boorus:blacklist";
+
+            var blacklistObj = new BlacklistDto(tag, reason);
+
+            return this._db.SetAddAsync(key, blacklistObj);
+        }
+
+        public Task<Boolean> BlacklistContainsAsync(String tag, String reason)
+        {
+            const String key = "boorus:blacklist";
+
+            var blacklistObj = new BlacklistDto(tag, reason);
+
+            return this._db.SetContainsAsync(key, blacklistObj);
+        }
+
+        public Task BlacklistRemoveAsync(String tag, String reason)
+        {
+            const String key = "boorus:blacklist";
+
+            var blacklistObj = new BlacklistDto(tag, reason);
+
+            return this._db.SetRemoveAsync(key, blacklistObj);
+        }
+
+        public async Task<ImmutableArray<BlacklistDto>> BlacklistGetAllAsync()
+        {
+            const String key = "boorus:blacklist";
+
+            var blacklist = await this._db.SetMembersAsync<BlacklistDto>(key);
+
+            return blacklist.ToImmutableArray();
         }
 
         public async Task<IEnumerable<(UInt64, UInt64)>> GetSubscriptionsAsync(SourceBooru booru)

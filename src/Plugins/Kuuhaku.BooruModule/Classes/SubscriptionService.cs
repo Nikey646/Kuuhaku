@@ -106,10 +106,14 @@ namespace Kuuhaku.BooruModule.Classes
             var lastId = await this._repository.GetLastSubscriptionId(booru.Booru);
             var newLastId = 0ul;
 
+            var globalBlacklistDtos = await this._repository.BlacklistGetAllAsync();
+            var globalBlacklist = globalBlacklistDtos.Select(dto => dto.Tag).ToImmutableArray();
+
             var posts = await booru.GetPostsAsync("", 1, 20);
             var usablePosts = posts
                 .Where(p => !(p.Files == null || p.Files.IsVideo || p.Files.IsFlash || p.Files.IsUgoira))
-                .Where(p => p.Tags.All(t => !GenericBooruModule.BlacklistedTags.Contains(t.Name)))
+                .Where(p => p.Tags.All(t => !GenericBooruModule.BlacklistedTags.Contains(t.Name)) &&
+                            p.Tags.All(t => !globalBlacklist.Contains(t.Name)))
                 .OrderBy(p => p.Id)
                 .SkipWhile(p => p.Id <= lastId)
                 .ToImmutableArray();
@@ -183,18 +187,6 @@ namespace Kuuhaku.BooruModule.Classes
 
         private EmbedFieldBuilder CreateTagsField(ICollection<Tag> tags, SourceBooru sauce)
         {
-            String EscapeLink(String input)
-                => input.Replace("[", "\\[")
-                    .Replace("]", "\\]")
-                    .Replace("(", "%28")
-                    .Replace(")", "%29")
-                    .Replace("_", "\\_");
-
-            String Linkify(String name, String url)
-            {
-                return $"[{name}]({url})";
-            }
-
             var builder = new EmbedFieldBuilder()
                 .WithName("Tags")
                 .WithIsInline(false);
@@ -204,17 +196,16 @@ namespace Kuuhaku.BooruModule.Classes
 
             foreach (var tag in tags)
             {
-                var mdLink = Linkify(CustomTitleCaseTransformer.Instance.Transform(tag.Name),
-                    $"{sauce.BaseUri}{this.SearchUrl(sauce.Identifier)}?tags={EscapeLink(tag.Name.UrlEncode())}");
+                var tagName = CustomTitleCaseTransformer.Instance.Transform(tag.Name);
 
-                length += mdLink.Length + 2; // +2 for ", " after each.
+                length += tagName.Length + 2; // +2 for ", " after each.
                 if (length >= 1000) // Leave 24 characters spare if this condition is true.
                 {
                     transformedTags.Add("More…");
                     break;
                 }
 
-                transformedTags.Add(mdLink);
+                transformedTags.Add(tagName);
             }
 
             return builder.WithValue(transformedTags.Humanize());

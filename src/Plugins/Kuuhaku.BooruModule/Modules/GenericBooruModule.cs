@@ -42,7 +42,7 @@ namespace Kuuhaku.BooruModule.Modules
             this._repository = repository;
         }
 
-        [Command]
+        // ReSharper disable once MemberCanBeProtected.Global
         public virtual async Task GetPostsAsync(String tags = "")
         {
             using var typing = this.Channel.EnterTypingState();
@@ -51,6 +51,9 @@ namespace Kuuhaku.BooruModule.Modules
 
             // If for some reason we're not in a text channel, assume SFW only.
             var isNsfw = textChannel?.IsNsfw ?? false;
+
+            var globalBlacklistDtos = await this._repository.BlacklistGetAllAsync();
+            var globalBlacklist = globalBlacklistDtos.Select(dto => dto.Tag).ToImmutableArray();
 
             var viewHistory = await
                 this._repository.GetViewedHistoryAsync(tags, this.User, this.Guild, this.Channel, this.Booru.Booru);
@@ -66,7 +69,8 @@ namespace Kuuhaku.BooruModule.Modules
                     // These types of posts are not viable for viewing in Discord.
                     .Where(p => !(p.Files == null || p.Files.IsVideo || p.Files.IsFlash || p.Files.IsUgoira))
                     .Where(p => isNsfw || p.Rating == Rating.Safe)
-                    .Where(p => p.Tags.All(t => !BlacklistedTags.Contains(t.Name)))
+                    .Where(p => p.Tags.All(t => !BlacklistedTags.Contains(t.Name)) &&
+                                p.Tags.All(t => !globalBlacklist.Contains(t.Name)))
                     // It's safe to cast UInt64 p.Id to Int64 due to the fact the id will never exceed the max size of Int64.
                     .Where(p => !viewHistory.Contains((Int64) p.Id))
                     .ToImmutableArray();
@@ -89,7 +93,8 @@ namespace Kuuhaku.BooruModule.Modules
         {
             var embed = new KuuhakuEmbedBuilder()
                 .WithColor()
-                .WithAuthor($"Id - {post.Id}", $"{sauce.BaseUri}favicon.ico", $"{sauce.BaseUri}{this.PostUrl(sauce.Identifier)}{post.Id}")
+                .WithAuthor($"Id - {post.Id}", $"{sauce.BaseUri}favicon.ico",
+                    $"{sauce.BaseUri}{this.PostUrl(sauce.Identifier)}{post.Id}")
                 .WithTimestamp(post.UploadedAt)
                 .WithFooter(this.Context);
 
