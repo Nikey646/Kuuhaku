@@ -31,7 +31,7 @@ namespace Kuuhaku.BooruModule.Modules
             if (blacklisted)
             {
                 await this._booruRepository.BlacklistRemoveAsync(tag, reason);
-                await this.ReplyAsync(this.Embed.WithDescription($"{tag.MdBold().Quote()} (for {reason.Quote()} is no longer blacklisted."));
+                await this.ReplyAsync(this.Embed.WithDescription($"{tag.MdBold().Quote()} (for {reason.Quote()}) is no longer blacklisted."));
             }
             else
             {
