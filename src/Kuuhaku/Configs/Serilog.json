@@ -17,7 +17,7 @@
             {
               "Name": "File",
               "Args": {
-                "path": "logs\\yggdrasil.log",
+                "path": "logs/yggdrasil.log",
                 "rollingInterval": "Day",
                 "fileSizeLimitBytes": 5242880,
                 "rollOnFileSizeLimit": true,
@@ -34,7 +34,7 @@
             {
               "Name": "File",
               "Args": {
-                "path": "logs\\yggdrasil.clef",
+                "path": "logs/yggdrasil.clef",
                 "rollingInterval": "Day",
                 "fileSizeLimitBytes": 5242880,
                 "rollOnFileSizeLimit": true,
