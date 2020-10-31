@@ -9,6 +9,7 @@ using Kuuhaku.Infrastructure.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Systemd;
 using Serilog;
 using StackExchange.Redis.Extensions.Core.Configuration;
 using StackExchange.Redis.Extensions.Newtonsoft;
@@ -44,7 +45,7 @@ namespace Kuuhaku
 
         private static IHostBuilder CreateHostBuilder(string[] args)
         {
-            return Host.CreateDefaultBuilder()
+            var builder = Host.CreateDefaultBuilder()
                 .ConfigureAppConfiguration((ctx, builder) =>
                 {
                     void AddEnvConfigs(IConfigurationBuilder b, params String[] prefixes)
@@ -118,7 +119,12 @@ namespace Kuuhaku
 
                     b.Token = ctx.Configuration[tokenKey];
                     b.SocketConfig = new DiscordSocketConfig {LogLevel = LogSeverity.Verbose, MessageCacheSize = 200,};
-                })
+                });
+
+            if (SystemdHelpers.IsSystemdService())
+                return builder.UseSystemd();
+
+            return builder
                 .UseConsoleLifetime();
         }
     }
