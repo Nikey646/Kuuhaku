@@ -30,8 +30,7 @@ namespace Kuuhaku
 
                 Log.ForContext<Program>().Information("Kūhaku startup has successfully been completed!");
 
-                host.WaitForShutdown();
-                // await host.WaitForShutdownAsync();
+                await host.WaitForShutdownAsync();
             }
             catch (Exception crap)
             {
