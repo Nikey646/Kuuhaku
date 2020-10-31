@@ -9,6 +9,7 @@ WorkingDirectory=~/Kuuhaku
 Restart=yes
 User=Kuuhaku
 Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=Kuuhaku__KuuhakuToken=
 
 [Install]
 WantedBy=multi-user.target
