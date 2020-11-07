@@ -16,6 +16,8 @@ ProjectSection(SolutionItems) = preProject
 	..\.github\workflows\dotnet-core-build.yml = ..\.github\workflows\dotnet-core-build.yml
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuuhaku.Infrastructure", "Kuuhaku.Infrastructure\Kuuhaku.Infrastructure.csproj", "{157C3F3E-93D7-420A-AA58-AD861295855B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{5FB85E6E-09DA-4426-9B1C-FE0BB94AE522}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FB85E6E-09DA-4426-9B1C-FE0BB94AE522}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FB85E6E-09DA-4426-9B1C-FE0BB94AE522}.Release|Any CPU.Build.0 = Release|Any CPU
+		{157C3F3E-93D7-420A-AA58-AD861295855B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{157C3F3E-93D7-420A-AA58-AD861295855B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{157C3F3E-93D7-420A-AA58-AD861295855B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{157C3F3E-93D7-420A-AA58-AD861295855B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{CA92FE61-E46F-468E-98D0-FD65994537AA} = {B2071973-6F9E-48FB-A932-22E1AC4A738B}

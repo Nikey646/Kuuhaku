@@ -431,3 +431,9 @@ $RECYCLE.BIN/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+##
+## Kuuhaku Configuration Files
+##
+/src/Kuuhaku/Configs/Kūhaku.Production.json
+/src/Kuuhaku/Configs/Kūhaku.Development.json
