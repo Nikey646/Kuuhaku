@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using Kuuhaku.Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Systemd;
@@ -67,7 +68,17 @@ namespace Kuuhaku
                     b.Configure(c =>
                         c.WithUnknownTypeResolution()
                             .WithDisposableTransientTracking()))
-                .UseSerilog((ctx, b) => b.ReadFrom.Configuration(ctx.Configuration));
+                .UseSerilog((ctx, b) => b.ReadFrom.Configuration(ctx.Configuration))
+                .UseDiscord(ctx =>
+                {
+                    String tokenKey;
+                    if ((tokenKey = ctx.Configuration["TokenKey"]) == null)
+                        throw new ArgumentException($"Unable to find \"tokenKey\" inside of the Configuration");
+
+                    return ctx.Configuration[tokenKey] ??
+                           throw new ArgumentException(
+                               $"Unable to find {tokenKey.Quote()} inside of the Configuration");
+                });
 
             return SystemdHelpers.IsSystemdService()
                 ? builder.UseSystemd()
