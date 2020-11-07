@@ -1,0 +1,26 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100-rc.2.20479.15
+    - name: Install dependencies
+      run: dotnet restore ${{ github.workspace }}/src/Kuuhaku.sln
+    - name: Build
+      run: dotnet build ${{ github.workspace }}/src/Kuuhaku.sln --configuration Release --no-restore
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Kuuhaku
+        path: ${{ github.workspace }}/src/Kuuhaku/bin/Release/net5.0/

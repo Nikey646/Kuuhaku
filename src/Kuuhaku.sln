@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuuhaku", "Kuuhaku\Kuuhaku.csproj", "{5FB85E6E-09DA-4426-9B1C-FE0BB94AE522}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{B2071973-6F9E-48FB-A932-22E1AC4A738B}"
+ProjectSection(SolutionItems) = preProject
+	..\.gitignore = ..\.gitignore
+	..\Kuuhaku.service = ..\Kuuhaku.service
+	..\readme.md = ..\readme.md
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{CA92FE61-E46F-468E-98D0-FD65994537AA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{DACCF9E0-1C4B-44D9-AFE5-641CD170C958}"
+ProjectSection(SolutionItems) = preProject
+	..\.github\workflows\dotnet-core-build.yml = ..\.github\workflows\dotnet-core-build.yml
+EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5FB85E6E-09DA-4426-9B1C-FE0BB94AE522}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FB85E6E-09DA-4426-9B1C-FE0BB94AE522}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FB85E6E-09DA-4426-9B1C-FE0BB94AE522}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FB85E6E-09DA-4426-9B1C-FE0BB94AE522}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CA92FE61-E46F-468E-98D0-FD65994537AA} = {B2071973-6F9E-48FB-A932-22E1AC4A738B}
+		{DACCF9E0-1C4B-44D9-AFE5-641CD170C958} = {CA92FE61-E46F-468E-98D0-FD65994537AA}
+	EndGlobalSection
+EndGlobal
