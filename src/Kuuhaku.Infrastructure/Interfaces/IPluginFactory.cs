@@ -9,7 +9,7 @@ namespace Kuuhaku.Infrastructure.Interfaces
     {
         void ConfigureServices(HostBuilderContext ctx, IServiceCollection services);
 
-        Task RegisterResolvers();
+        Task RegisterResolversAsync();
 
         (String configKey, Object defaultValue) ConfigureDefaultConfiguration()
         {
