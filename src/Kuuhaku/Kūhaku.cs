@@ -20,9 +20,11 @@ namespace Kuuhaku
         {
             // Create a logger until the host is built.
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
+                .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Warning)
+                .MinimumLevel.Override("System.Net.Http.HttpClient.Discord.LogicalHandler", LogEventLevel.Information)
+                .MinimumLevel.Override("System.Net.Http.HttpClient.Discord.ClientHandler", LogEventLevel.Information)
                 .Enrich.FromLogContext()
                 .WriteTo.Console(theme: SystemConsoleTheme.Colored, outputTemplate: DefaultOutputTemplate,
                     applyThemeToRedirectedOutput: true)
