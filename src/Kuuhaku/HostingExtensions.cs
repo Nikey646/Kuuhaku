@@ -1,7 +1,6 @@
 using System;
 using Kuuhaku.Infrastructure.Extensions;
 using Kuuhaku.Services;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Remora.Discord.Gateway.Extensions;
 
