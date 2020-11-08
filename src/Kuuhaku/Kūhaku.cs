@@ -72,11 +72,14 @@ namespace Kuuhaku
                         c.WithUnknownTypeResolution()
                             .WithDisposableTransientTracking()))
                 .UseSerilog((ctx, b) => b.ReadFrom.Configuration(ctx.Configuration))
+                .UsePlugins((ctx, b) => b.WithDirectory(Path.Combine(ctx.HostingEnvironment.ContentRootPath, "Plugins"))
+                    .WithFiles("Kūhaku.*.dll", "Kuuhaku.*.dll")
+                    .WithoutFiles("Kuuhaku.dll", "Kuuhaku.Infrastructure.dll"))
                 .UseDiscord(ctx =>
                 {
                     String tokenKey;
                     if ((tokenKey = ctx.Configuration["TokenKey"]) == null)
-                        throw new ArgumentException($"Unable to find \"tokenKey\" inside of the Configuration");
+                        throw new ArgumentException("Unable to find \"tokenKey\" inside of the Configuration");
 
                     return ctx.Configuration[tokenKey] ??
                            throw new ArgumentException(

@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="McMaster.NETCore.Plugins" Version="1.*" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0-rc.*" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="5.0.0-rc.*" />
       <PackageReference Include="Serilog.Extensions.Hosting" Version="4.0.0-dev-*" />
