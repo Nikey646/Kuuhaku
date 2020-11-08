@@ -43,13 +43,6 @@ namespace Kuuhaku.Services
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
-
-                var previous = (GatewayConnectionStatus) (typeof(DiscordGatewayClient)
-                    .GetField("_connectionStatus", BindingFlags.Instance | BindingFlags.NonPublic)
-                    ?.GetValue(this._client) ?? 0);
-                this._logger.LogTrace("Setting DiscordGatewayClient._connectionStatus to Offline was {previous}, workaround Nihlus/Remora.Discord#23", previous.ToString());
-                typeof(DiscordGatewayClient).GetField("_connectionStatus", BindingFlags.Instance | BindingFlags.NonPublic)
-                    ?.SetValue(this._client, 0);
             }
         }
     }
