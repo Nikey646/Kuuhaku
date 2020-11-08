@@ -4,7 +4,7 @@ using Kuuhaku.Services;
 using Microsoft.Extensions.Hosting;
 using Remora.Discord.Gateway.Extensions;
 
-namespace Kuuhaku
+namespace Kuuhaku.Extensions
 {
     public static class HostingExtensions
     {
