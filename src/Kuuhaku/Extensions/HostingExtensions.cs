@@ -60,7 +60,10 @@ namespace Kuuhaku.Extensions
                     foreach (var factoryType in assembly.GetTypes().Where(t => typeof(IPluginFactory).IsAssignableFrom(t) && !(t.IsAbstract || t.IsInterface)))
                     {
                         var factory = (IPluginFactory) Activator.CreateInstance(factoryType);
-                        factory?.ConfigureServices(ctx, services);
+                        if (factory == null)
+                            continue;
+
+                        factory.ConfigureServices(ctx, services);
                         services.AddSingleton(factory);
                     }
                 }
